@@ -1,0 +1,54 @@
+body {
+	margin: 0px;
+}
+body, h, div, span, p, label , td, input {
+	font-family: 'Open Sans';
+	font-weight: 300;
+}
+.imagefeed {
+	background: #29292b;
+	margin-left: auto;
+	margin-right: auto;
+}
+.imagefeed-titlebar {
+	height: 1em;
+	padding: 0.75em 0em;
+}
+.imagefeed-titlebar a {
+	color: #fff;
+	text-decoration: none;
+}
+.imagefeed-titlebar a:hover {
+	text-decoration: underline;
+}
+.imagefeed-logo {
+	position: relative;
+	top: -2px;
+	padding: 0px 35px;
+	margin: 0em 0.5em;
+	background-image: url(https://s.yimg.com/pw/images/flickr_logo_small_white.png);
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+.imagefeed-body {
+	overflow: hidden;
+	padding: 0px 5px;
+}
+.imagefeed-card {
+	float: left;
+	margin: 2.5px;
+}
+.imagefeed-card img {
+	height: 230px;
+}
+.imagefeed-card span {
+	position: absolute;
+	font-size: 13px;
+	color: #ffffff;
+	padding: 0.5em 1em;
+	border-radius: 0px 0px 3px 0px;
+	background: rgb(41, 41, 43) transparent;
+	background: rgba(41, 41, 43, 0.6);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#29292b99, endColorstr=#29292b99);
+	-ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#29292b99, endColorstr=#29292b99);
+}
