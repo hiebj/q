@@ -177,6 +177,39 @@
 			while (parent.hasChildNodes()) {
 				parent.removeChild(parent.lastChild);
 			}
+		},
+	
+		/* Convenience function to make simple AJAX requests slightly less painful.
+		 * Since I can't make cross-domain requests, this never actually got used, but I wrote it anyway when I was messing around.
+		 * The format for an argument to this function is as follows: {
+		 *		method,		Request method, e.g. GET PUT POST DELETE. Defaults to GET
+		 *		url,		Target for the request
+		 *		body,		Body parameter passed directly to XMLHttpRequest.send()
+		 *		json,		Object that will be converted to a JSON string and sent in the message body
+		 *		callback,	Callback to be executed when the request is complete (readyState = 4).
+		 *					The parameter to the callback will contain the following properties of the XMLHttpRequest: {
+		 *						responseText,
+		 *						responseXML,
+		 *						status,
+		 *						statusText
+		 *					}
+		 *		scope		'this' reference to use in the callback
+		 */
+		ajax: function(request) {
+			var xmlhttp = new XMLHttpRequest(),
+				body = request.json ? JSON.stringify(request.json) : request.body;
+			xmlhttp.open(request.method || 'GET', request.url, true);
+			xmlhttp.onreadystatechange = function() {
+				if (xmlhttp.readyState === 4 && request.callback) {
+					request.callback.call(request.scope || this, {
+						responseText: xmlhttp.responseText,
+						responseXML: xmlhttp.responseXML,
+						status: xmlhttp.status,
+						statusText: xmlhttp.statusText
+					});
+				}
+			};
+			xmlhttp.send(body);
 		}
 	});
 	Q.prototype.$proto = Q.prototype;

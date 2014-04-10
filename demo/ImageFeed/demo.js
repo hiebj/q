@@ -3,8 +3,7 @@ Q.on(window, 'load', function() {
 	var feed = new Q.HoverFeed({
 		renderTo: document.body
 	});
-	// I am using a spoof function instead of an ajax call because I can't make cross-domain requests and have no local proxy.
-	flickrSpoof({ // T.ajax({
+	flickrSpoof({ // spoof function with the same arity as Q.ajax()
 		url: 'feed.json',
 		callback: updateFeed
 	});
