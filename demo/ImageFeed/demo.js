@@ -1,7 +1,7 @@
 // Page load handler
 Q.on(window, 'load', function() {
 	var feed = new Q.HoverFeed({
-		renderTo: 'flickrPanel'
+		renderTo: document.body
 	});
 	// I am using a spoof function instead of an ajax call because I can't make cross-domain requests and have no local proxy.
 	flickrSpoof({ // T.ajax({
