@@ -2,16 +2,11 @@ Q.on(window, 'load', function() {
 	var feed = new Q.HoverFeed({
 		renderTo: document.body
 	});
-	flickrSpoof({ // spoof function with the same arity as Q.ajax()
+	// flickrSpoof is a spoof function to emulate Q.ajax()
+	flickrSpoof({
 		url: 'feed.json',
-		callback: updateFeed
+		callback: function (response) {
+            feed.updateFeed(JSON.parse(response.responseText));
+        }
 	});
-		
-	function updateFeed(response) {
-		var data = response.responseText;
-		// Just cut out that callback function name
-		data = data.substring(data.indexOf('{'), data.lastIndexOf('}') + 1);
-		data = JSON.parse(data);
-		feed.updateFeed(data);
-	}
 });
