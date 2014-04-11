@@ -16,7 +16,7 @@ Q.on(window, 'load', function() {
 		submit: 'submit',
 		validators: {
 			// Validator for the username field.
-			// Requirements: "must contain a lower and upper case letter and at least 1 number. Cannot contain special characters"
+			// Requirements: must not contain whitespace or special characters.
 			username: function(value) {
 				var valid = true;
 				if (value.match(/\s/)) {
@@ -30,7 +30,7 @@ Q.on(window, 'load', function() {
 			},
 			
 			// Validator for the password field.
-			// Requirements: "must contain at least 2 numbers and be 8 to 15 characters in length"
+			// Requirements: must be between 8-15 characters, no whitespace, and must contain one lowercase, one uppercase, one number and one special character
 			password: function(value) {
 				var valid = true,
 					invalidMsg = 'password must contain at least one ';
