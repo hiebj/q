@@ -1,3 +1,5 @@
+// Q is a very small JavaScript framework.
+// @author hiebj
 (function() {
 	var extending = false;
 	function Q() {
@@ -31,6 +33,7 @@
 	};
 	// TODO Q.constructor.mixin(target)
 	// TODO Q.Q() or Q.inherit() that returns an extendable, mixable wrapper around a non-Q javascript object
+	// TODO safe addCls and removeCls functions
 	Q = Q.extend({
 		apply: apply,
 		
@@ -88,7 +91,7 @@
 				// Wrapper handler to execute the passed handler in the given scope
 				var scopingHandler = function(e) {
 					scope = scope || Q.getTarget(e);
-					handler.apply(scope, arguments);
+					return handler.apply(scope, arguments);
 				};
 				if (element.addEventListener) {
 					// IE-style events

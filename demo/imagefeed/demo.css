@@ -5,23 +5,21 @@ body, h, div, span, p, label , td, input {
 	font-family: 'Open Sans';
 	font-weight: 300;
 }
-.imagefeed {
+.q-imagefeed {
 	background: #29292b;
-	margin-left: auto;
-	margin-right: auto;
 }
-.imagefeed-titlebar {
+.q-imagefeed-titlebar {
 	height: 1em;
 	padding: 0.75em 0em;
 }
-.imagefeed-titlebar a {
+.q-imagefeed-titlebar a {
 	color: #fff;
 	text-decoration: none;
 }
-.imagefeed-titlebar a:hover {
+.q-imagefeed-titlebar a:hover {
 	text-decoration: underline;
 }
-.imagefeed-logo {
+.q-imagefeed-logo {
 	position: relative;
 	top: -2px;
 	padding: 0px 35px;
@@ -30,26 +28,26 @@ body, h, div, span, p, label , td, input {
 	background-position: center center;
 	background-repeat: no-repeat;
 }
-.imagefeed-body {
+.q-imagefeed-body {
 	overflow: hidden;
 	padding: 0px 5px;
 }
-.imagefeed-card {
-	float: left;
+.q-imagefeed-card {
+	display: inline-block;
 	margin: 2.5px;
 }
-.imagefeed-card img {
+.q-imagefeed-card img {
 	height: 230px;
 }
-.imagefeed-card div {
+.q-imagefeed-card div {
 	position: relative;
 	top: -230px;
 	visibility: hidden;
 }
-.imagefeed-card:hover div {
+.q-imagefeed-card:hover div {
 	visibility: visible;
 }
-.imagefeed-card div span {
+.q-imagefeed-card div span {
 	position: absolute;
 	font-size: 13px;
 	color: #ffffff;

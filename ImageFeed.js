@@ -1,5 +1,6 @@
 /* ImageFeed is component that will generate HTML for an image feed using a given data object.
- * It was designed to be used as a Flickr feed, but it is generalized for any collection of pictures. Feeds in a different data format could be easily transformed to match this format.
+ * It was designed to be used as a Flickr feed, but it is generalized for any collection of pictures.
+ * Feeds in a different data format could be easily transformed to match this format.
  */
 Q.ImageFeed = Q.extend({
 	// The target node into which the feed will be rendered.
@@ -25,13 +26,13 @@ Q.ImageFeed = Q.extend({
 	feed: undefined,
 	
 	// CSS classes for the feed's various elements.
-	cls: 'imagefeed',
-	titleCls: 'imagefeed-titlebar',
-	logoCls: 'imagefeed-logo',
-	bodyCls: 'imagefeed-body',
-	cardCls: 'imagefeed-card',
+	cls: 'q-imagefeed',
+	titleCls: 'q-imagefeed-titlebar',
+	logoCls: 'q-imagefeed-logo',
+	bodyCls: 'q-imagefeed-body',
+	cardCls: 'q-imagefeed-card',
 	// Prefix string for generated ids
-	idPrefix: 'imagefeed-',
+	idPrefix: 'q-imagefeed-',
 	cardIdPrefix: 'card-',
 	imgIdPrefix: 'img-',
 	
