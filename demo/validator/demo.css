@@ -22,13 +22,14 @@ form label {
 	text-align: right;
 }
 form input {
-	width: 100%;
+	width: 98.5%;
 	display: block;
 	padding: 0.25em 0em;
 	margin: 0.25em 0em;
 }
 form input.submit {
-	height: 30px;
+	height: 40px;
+	width: 100%;
 	background: #29292b;
 	margin: 1em 0em;
 	border: none;
@@ -39,7 +40,7 @@ form input.submit:active {
 	background: #371b2c;
 }
 form input.submit:disabled {
-	background: #29292b;
+	background: #d1d6e7;
 	color: #8C8C8C;
 	cursor: auto;
 }
