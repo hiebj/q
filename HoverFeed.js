@@ -5,21 +5,11 @@ Q.HoverFeed = Q.ImageFeed.extend({
 		var imageEl = this.getImage(this.body.childNodes.length - 1);
 		imageEl.parentNode.title = '';
 		Q.add(imageEl.parentNode, {
-			tag: 'span',
-			hidden: true,
-			items: image.title
-		}, 0);
-		Q.on(imageEl, 'mouseover', this.onMouseover, this);
-	},
-	
-	onMouseover: function(e) {
-		var overlay = Q.getTarget(e).previousSibling;
-		if (overlay !== this.overlay) {
-			if (this.overlay) {
-				this.hide(this.overlay);
+			tag: 'div',
+			items: {
+				tag: 'span',
+				items: image.title
 			}
-			this.show(overlay);
-			this.overlay = overlay;
-		}
+		});
 	}
 });

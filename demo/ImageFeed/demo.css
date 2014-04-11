@@ -41,12 +41,19 @@ body, h, div, span, p, label , td, input {
 .imagefeed-card img {
 	height: 230px;
 }
-.imagefeed-card span {
+.imagefeed-card div {
+	position: relative;
+	top: -230px;
+	visibility: hidden;
+}
+.imagefeed-card:hover div {
+	visibility: visible;
+}
+.imagefeed-card div span {
 	position: absolute;
 	font-size: 13px;
 	color: #ffffff;
 	padding: 0.5em 1em;
-	border-radius: 0px 0px 3px 0px;
 	background: rgb(41, 41, 43) transparent;
 	background: rgba(41, 41, 43, 0.6);
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#29292b99, endColorstr=#29292b99);
