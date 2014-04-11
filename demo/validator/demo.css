@@ -17,14 +17,14 @@ body > div > h3 {
 	margin: 0.25em 0em 0.5em;
 }
 form label {
-	width: 100%;
 	display: block;
 	text-align: right;
 }
 form input {
-	width: 98.5%;
+    width: 96%;
 	display: block;
-	padding: 0.25em 0em;
+    border: 1px solid #8c8c8c;
+	padding: 0.25em;
 	margin: 0.25em 0em;
 }
 form input.submit {
@@ -45,7 +45,7 @@ form input.submit:disabled {
 	cursor: auto;
 }
 .q-validator-invalid {
-	border: 1px solid red;
+	border: 1px inset red;
 }
 .q-validator-msg {
 	color: red;
