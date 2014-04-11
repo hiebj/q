@@ -84,8 +84,17 @@ Q.ImageFeed = Q.extend({
 	// Clears and reloads the feed for a new collection of pictures.
 	// The 'feed' parameter's format should match the format described for the #feed property.
 	updateFeed: function(feed) {
-		var images = feed.items,
-			link = [{
+		var images = feed.items;
+		this.clear();
+		this.updateTitlebar(feed);
+		this.feed = feed;
+		for (var i = 0; i < images.length; i++) {
+			this.addImage(images[i]);
+		}
+	},
+	
+	updateTitlebar: function(feed) {
+		var link = [{
 				tag: 'a',
 				href: feed.link,
 				items: {
@@ -97,8 +106,6 @@ Q.ImageFeed = Q.extend({
 				href: feed.link,
 				items: feed.title
 			}];
-		this.clear();
-		this.feed = feed;
 		if (feed.link && feed.title) {
 			Q.add(this.head, link);
 			Q.add(this.foot, link);
@@ -107,9 +114,6 @@ Q.ImageFeed = Q.extend({
 		} else {
 			this.hide(this.head);
 			this.hide(this.foot);
-		}
-		for (var i = 0; i < images.length; i++) {
-			this.addImage(images[i]);
 		}
 	},
 	
