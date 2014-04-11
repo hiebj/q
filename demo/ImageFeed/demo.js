@@ -1,4 +1,3 @@
-// Page load handler
 Q.on(window, 'load', function() {
 	var feed = new Q.HoverFeed({
 		renderTo: document.body
