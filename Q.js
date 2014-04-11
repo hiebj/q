@@ -150,7 +150,7 @@
 		
 		/* A utility for adding children to an existing DOM node.
 		 * It enhances native JS by allowing a collection of nodes to be appended at once, and also by allowing node *definitions* in addition to actual node instances.
-		 * Any passed node definitions will be created into actual HTMLElement instances by invoking the #create function.
+		 * Any passed node definitions will be created into actual HTMLElement instances by invoking the #dom function.
 		 */
 		add: function(parent, items, index) {
 			if (items) {
@@ -183,7 +183,6 @@
 		},
 	
 		/* Convenience function to make simple AJAX requests slightly less painful.
-		 * Since I can't make cross-domain requests, this never actually got used, but I wrote it anyway when I was messing around.
 		 * The format for an argument to this function is as follows: {
 		 *		method,		Request method, e.g. GET PUT POST DELETE. Defaults to GET
 		 *		url,		Target for the request
@@ -215,8 +214,8 @@
 			xmlhttp.send(body);
 		}
 	});
-	Q.prototype.$proto = Q.prototype;
+	// Mask the Q's constructor
+	var proto = Q.prototype;
 	Q = this.Q = new Q();
-	Q.$proto.constructor = Q.$super.constructor;
-	delete Q.$proto.$proto;
+	proto.constructor = proto.$super.constructor;
 })();
