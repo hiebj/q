@@ -1,72 +1,74 @@
-body, div, span, p, label , td, input {
-	font-family: 'Open Sans';
-	font-weight: 300;
-	color: #29292b;
+body, div, span, p, label, td, input {
+    font-family:'Open Sans';
+    font-weight: 300;
+    color: #b163a3;
+}
+input {
+    color: #29292b;
 }
 body {
-	background: #371b2c;
+    background: #d1d6e7;
 }
 body > div {
-	text-align: right;
-	width: 225px;
-	padding: 10px 25px;
-	margin: auto;
-	background: #d1d6e7;
+    text-align: right;
+    width: 225px;
+    padding: 10px 25px;
+    margin: 80px auto;
+    background: #ffffff;
 }
 body > div > h3 {
-	margin: 0.25em 0em 0.5em;
+    margin: 0.25em 0em 0.5em;
 }
 form label {
-	display: block;
-	text-align: right;
+    display: block;
+    text-align: right;
 }
 form input {
     width: 96%;
-	display: block;
+    display: block;
     border: 1px solid #8c8c8c;
-	padding: 0.25em;
-	margin: 0.25em 0em;
+    padding: 0.25em;
+    margin: 0.25em 0em;
 }
 form input.submit {
-	height: 40px;
-	width: 100%;
-	background: #29292b;
-	margin: 1em 0em;
-	border: none;
-	color: #d1d6e7;
-	cursor: pointer;
+    height: 40px;
+    width: 100%;
+    background: #b163a3;
+    margin: 1em 0em;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
 }
 form input.submit:active {
-	background: #371b2c;
+    background: #29292b;
 }
 form input.submit:disabled {
-	background: #d1d6e7;
-	color: #8C8C8C;
-	cursor: auto;
+    background: #d1d6e7;
+    color: #8C8C8C;
+    cursor: auto;
 }
 .q-validator-invalid {
-	border: 1px inset red;
+    border: 1px inset red;
 }
 .q-validator-msg {
-	color: red;
-	font-size: 9pt;
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 300;
-  src: local('Open Sans Light'), local('OpenSans-Light'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/DXI1ORHCpsQm3Vp6mXoaTXhCUOGz7vYGh680lGh-uXM.woff) format('woff');
+    color: red;
+    font-size: 9pt;
 }
 @font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Open Sans'), local('OpenSans'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/cJZKeOuBrn4kERxqtaUH3T8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
+    font-family:'Open Sans';
+    font-style: normal;
+    font-weight: 300;
+    src: local('Open Sans Light'), local('OpenSans-Light'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/DXI1ORHCpsQm3Vp6mXoaTXhCUOGz7vYGh680lGh-uXM.woff) format('woff');
 }
 @font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 600;
-  src: local('Open Sans Semibold'), local('OpenSans-Semibold'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/MTP_ySUJH_bn48VBG8sNSnhCUOGz7vYGh680lGh-uXM.woff) format('woff');
+    font-family:'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Open Sans'), local('OpenSans'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/cJZKeOuBrn4kERxqtaUH3T8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
+}
+@font-face {
+    font-family:'Open Sans';
+    font-style: normal;
+    font-weight: 600;
+    src: local('Open Sans Semibold'), local('OpenSans-Semibold'), url(http://themes.googleusercontent.com/static/fonts/opensans/v8/MTP_ySUJH_bn48VBG8sNSnhCUOGz7vYGh680lGh-uXM.woff) format('woff');
 }
