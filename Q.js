@@ -139,13 +139,13 @@
         },
 		
 		each: function(array, fn, scope) {
-			if (array.forEach) {
-				array.forEach(fn, scope);
-			} else {
-				for (var i = 0; i < array.length; i++) {
-					fn.call(scope, array[i]);
+			var i;
+			for (i = 0;i < array.length; i++) {
+				if (fn.call(scope, array[i]) === false) {
+					return i;
 				}
 			}
+			return true;
 		},
 		
 		/* Convenience builder for creating entire DOM structures from javascript object definitions.

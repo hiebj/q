@@ -54,7 +54,14 @@ Q.ImageFeed = Q.extend({
 		}
 	},
 	
-	// Creates the main DOM structure of the feed (the body and titlebars) and renders it into the renderTo target.
+	/* Creates the main DOM structure of the feed (the body and titlebars) and renders it into the renderTo target.
+	 * tpl:
+	 * 		<div class="{cls}">						this.el
+	 *			<div class="{titleCls}"></div>		this.head
+	 *			<div class="{bodyCls}"></div>		this.body
+	 *			<div class="{titleCls}"></div>		this.foot
+	 *		</div>
+	 */
 	render: function(renderTo) {
 		this.el = Q.dom({
 			tag: 'div',
@@ -93,6 +100,12 @@ Q.ImageFeed = Q.extend({
 		}
 	},
 	
+	/* titleTpl:
+	 * 		<a href="{link}">
+	 *			<span class="{logoCls}" />
+	 *		</a>
+	 *		<a href="{link}">{title}</a>
+	 */
 	updateTitlebar: function(feed) {
 		var link = [{
 				tag: 'a',
@@ -137,7 +150,16 @@ Q.ImageFeed = Q.extend({
 	
 	// Renders an image into the collection.
 	// The format for the 'image' parameter should match the format described for an item in the #feed collection.
+	// cardTpl:
+	//		<div id="{Q.id(cardIdPrefix)}" class="{cardCls}">
+	//			<a href="{link}" title="{title}">
+	//				<img id="{Q.id(imgIdPrefix)}" src="{src}" />
+	//				<div><span>{title}</span></div>
+	//			</a>
+	//		</div>
 	addImage: function(image) {
+		// If this were reused for a non-flickr feed, the image object may have a src string rather than a media object (see #feed)
+		image.src = image.media.m
 		Q.add(this.body, {
 			tag: 'div',
 			id: Q.id(this.cardIdPrefix),
@@ -149,8 +171,7 @@ Q.ImageFeed = Q.extend({
 				items: [{
 					tag: 'img',
 					id: Q.id(this.imgIdPrefix),
-					// If this were reused for a non-flickr feed, the image object may have a src string rather than a media object (see #feed)
-					src: image.src || image.media.m
+					src: image.src
 				}, {
 					tag: 'div',
 					hidden: Q.isEmpty(image.title),
