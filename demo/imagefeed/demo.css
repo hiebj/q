@@ -27,7 +27,10 @@ body, h, div, span, p, label , td, input {
 }
 .q-imagefeed-titlebar label input {
 	height: 1.5em;
+<<<<<<< HEAD
 	width: 200px;
+=======
+>>>>>>> f2b3ce15c5b2f77a32e329ab5bf2439baec4dce2
 	padding: 0em 0.25em;
 	margin: 0em 1em;
 }
