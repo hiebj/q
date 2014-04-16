@@ -148,15 +148,16 @@ Q.ImageFeed = Q.extend({
 		el.hidden = true;
 	},
 	
-	// Renders an image into the collection.
-	// The format for the 'image' parameter should match the format described for an item in the #feed collection.
-	// cardTpl:
-	//		<div id="{Q.id(cardIdPrefix)}" class="{cardCls}">
-	//			<a href="{link}" title="{title}">
-	//				<img id="{Q.id(imgIdPrefix)}" src="{src}" />
-	//				<div><span>{title}</span></div>
-	//			</a>
-	//		</div>
+	/* Renders an image into the collection.
+	 * The format for the 'image' parameter should match the format described for an item in the #feed collection.
+	 * cardTpl:
+	 *		<div id="{Q.id(cardIdPrefix)}" class="{cardCls}">
+	 *			<a href="{link}">
+	 *				<img id="{Q.id(imgIdPrefix)}" src="{src}" />
+	 *				<div><span>{title}</span></div>
+	 *			</a>
+	 *		</div>
+	 */
 	addImage: function(image) {
 		// If this were reused for a non-flickr feed, the image object may have a src string rather than a media object (see #feed)
 		image.src = image.media.m
@@ -167,7 +168,6 @@ Q.ImageFeed = Q.extend({
 			items: {
 				tag: 'a',
 				href: image.link,
-				title: image.title,
 				items: [{
 					tag: 'img',
 					id: Q.id(this.imgIdPrefix),
