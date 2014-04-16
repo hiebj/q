@@ -123,6 +123,31 @@
 			return el instanceof HTMLElement;
 		},
 		
+		isEmpty: function(value) {
+			return (value === null) || 
+					(value === undefined) ||
+					(value === '') ||
+					(Q.isArray(value) && value.length === 0);
+		},
+		
+		isArray: function(value) {
+			if ('isArray' in Array) {
+				return Array.isArray(value);
+			} else {
+				return toString.call(value) === '[object Array]';
+			}
+        },
+		
+		each: function(array, fn, scope) {
+			if (array.forEach) {
+				array.forEach(fn, scope);
+			} else {
+				for (var i = 0; i < array.length; i++) {
+					fn.call(scope, array[i]);
+				}
+			}
+		},
+		
 		/* Convenience builder for creating entire DOM structures from javascript object definitions.
 		 * The format for an argument to this function is as follows: {
 		 *		tag,		The name of the element to create (e.g. 'div' or 'span')
@@ -151,14 +176,17 @@
 		/* A utility for adding children to an existing DOM node.
 		 * It enhances native JS by allowing a collection of nodes to be appended at once, and also by allowing node *definitions* in addition to actual node instances.
 		 * Any passed node definitions will be created into actual HTMLElement instances by invoking the #dom function.
+		 * Returns an array containing the added HTMLElements, if any.
 		 */
 		add: function(parent, items, index) {
+			var added = [],
+				before;
 			if (items) {
-				if (!Array.isArray(items)) {
+				if (!Q.isArray(items)) {
 					items = [ items ];
 				}
-				var before = isNaN(index) ? false : parent.childNodes[index];
-				items.forEach(function(item) {
+				before = isNaN(index) ? false : parent.childNodes[index];
+				Q.each(items, function(item) {
 					if (!Q.isDom(item)) {
 						if (typeof item === 'string') {
 							item = document.createTextNode(item);
@@ -171,8 +199,10 @@
 					} else {
 						parent.appendChild(item);
 					}
+					added.push(item);
 				});
 			}
+			return added;
 		},
 		
 		// Convenience function to clear all children from a given node
@@ -186,6 +216,7 @@
 		 * The format for an argument to this function is as follows: {
 		 *		method,		Request method, e.g. GET PUT POST DELETE. Defaults to GET
 		 *		url,		Target for the request
+		 *		params,		URL parameters (query string parameters) to append to the URL
 		 *		body,		Body parameter passed directly to XMLHttpRequest.send()
 		 *		json,		Object that will be converted to a JSON string and sent in the message body
 		 *		callback,	Callback to be executed when the request is complete (readyState = 4).
@@ -199,8 +230,9 @@
 		 */
 		ajax: function(request) {
 			var xmlhttp = new XMLHttpRequest(),
-				body = request.json ? JSON.stringify(request.json) : request.body;
-			xmlhttp.open(request.method || 'GET', request.url, true);
+				body = request.json ? JSON.stringify(request.json) : request.body,
+				url = Q.urlAppend(request.url, request.params);
+			xmlhttp.open(request.method || 'GET', url, true);
 			xmlhttp.onreadystatechange = function() {
 				if (xmlhttp.readyState === 4 && request.callback) {
 					request.callback.call(request.scope || this, {
@@ -212,6 +244,51 @@
 				}
 			};
 			xmlhttp.send(body);
+			return xmlhttp;
+		},
+		
+		urlAppend: function(url, params) {
+			if (typeof params === 'object') {
+				for (var param in params) {
+					url = Q.urlAppend(url, param + '=' + params[param]);
+				}
+			} else if (!Q.isEmpty(params)) {
+				url += (url.indexOf('?') !== -1 ? '&' : '?') + params;
+            }
+            return url;
+		},
+		
+		/* Convenience function to make simple JSONP requests.
+		 * The format for an argument to this function is as follows: {
+		 *		url,			Target for the request
+		 *		params,			URL parameters (query string parameters) to append to the URL
+		 *		callbackParam,	JSONP callback parameter name to use when creating the request.
+		 *						If this parameter is included, a temporary handler will be generated for the request, which will relay to the passed 'callback'.
+		 *						If this parameter is missing, the 'callback' and 'scope' parameters will be ignored, and it is assumed that an appropriate handler is already set up and passed to the request in the 'params' object.
+		 *		callback,		Callback to be executed when the request is complete (when the <script> loads).
+		 *						The callback will be relayed the same arguments passed to the generated JSONP handler.
+		 *		scope			'this' reference to use in the callback
+		 */
+		jsonp: function(request) {
+			var params = Q.apply({}, request.params),
+				callbackParam = request.callbackParam,
+				handlerId,
+				script;
+			if (!Q.isEmpty(callbackParam)) {
+				handlerId = Q.id('_jsonp');
+				Q[handlerId] = function() {
+					request.callback.apply(request.scope || this, arguments);
+					script.parentNode.removeChild(script);
+					delete Q[handlerId];
+				};
+				params[callbackParam] = 'Q.' + handlerId;
+			}
+			script = Q.add(document.head, {
+				tag: 'script',
+				type: 'text/javascript',
+				src: Q.urlAppend(request.url, params)
+			})[0];
+			return script;
 		}
 	});
 	// Mask the Q's constructor

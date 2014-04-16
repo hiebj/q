@@ -55,9 +55,12 @@ Q.Validator = Q.extend({
 			field = this.form[fieldName];
 			if (field) {
 				// Validate the field on change, keyup and blur. Overkill, but gets maximum coverage.
-				Q.on(field, 'keyup', handler, this);
-				Q.on(field, 'change', handler, this);
-				Q.on(field, 'blur', handler, this);
+				Q.on(field, {
+					keyup: handler,
+					change: handler,
+					blur: handler,
+					scope: this
+				});
 			}
 		}
 	},
