@@ -146,12 +146,19 @@ Q.ImageFeed = Q.extend({
 				tag: 'a',
 				href: image.link,
 				title: image.title,
-				items: {
+				items: [{
 					tag: 'img',
 					id: Q.id(this.imgIdPrefix),
 					// If this were reused for a non-flickr feed, the image object may have a src string rather than a media object (see #feed)
 					src: image.src || image.media.m
-				}
+				}, {
+					tag: 'div',
+					hidden: Q.isEmpty(image.title),
+					items: {
+						tag: 'span',
+						items: image.title
+					}
+				}]
 			}
 		});
 	},

@@ -11,13 +11,25 @@ body, h, div, span, p, label , td, input {
 .q-imagefeed-titlebar {
 	height: 1em;
 	padding: 0.75em 0em;
+	color: #fff;
 }
 .q-imagefeed-titlebar a {
-	color: #fff;
+	color: inherit;
 	text-decoration: none;
 }
 .q-imagefeed-titlebar a:hover {
 	text-decoration: underline;
+}
+.q-imagefeed-titlebar label {
+	float: right;
+	position: relative;
+	top: -0.25em;
+}
+.q-imagefeed-titlebar label input {
+	height: 1.5em;
+	width: 200px;
+	padding: 0em 0.25em;
+	margin: 0em 1em;
 }
 .q-imagefeed-logo {
 	position: relative;
