@@ -1,17 +1,17 @@
-Q.on(window, 'load', function() {
+Q(window).on('load', function() {
 	var feed = new Q.ImageFeed(),
 		url = 'http://www.flickr.com/services/feeds/photos_public.gne',
 		lastSearch = 'climbing, bouldering',
 		lastTags,
 		searchTask;
 		
-	function onChange(e) {
+	function onChange(target, e) {
 		if (searchTask) {
 			clearTimeout(searchTask);
 		}
 		searchTask = setTimeout(function() {
 			searchTask = null;
-			doSearch(Q.getTarget(e).value);
+			doSearch(target.value);
 		}, 400);
 	}
 	
@@ -27,9 +27,8 @@ Q.on(window, 'load', function() {
 					format: 'json'
 				},
 				callbackParam: 'jsoncallback',
-				callback: function (data) {
+				callback: function(data) {
 					feed.updateFeed(data);
-					feed.search.focus();
 				}
 			});
 		}
@@ -38,22 +37,12 @@ Q.on(window, 'load', function() {
 	Q.intercept(feed, {
 		updateTitlebar: function() {
 			this.$proceed.apply(this, arguments);
-			if (!this.search) {
-				this.search = Q.dom({
-					tag: 'label',
-					items: [
-						'search tags', {
-						tag: 'input',
-						value: lastSearch,
-						listeners: {
-							change: onChange,
-							keyup: onChange,
-							blur: onChange
-						}
-					}]
-				});
-			}
-			Q.add(this.head, this.search);
+			// This traversal will select the input tag after adding it to the top bar
+			this.el.first().add('<label>search tags <input></label>').last().last().on({
+				change: onChange,
+				keyup: onChange,
+				blur: onChange
+			}).focus().dom.value = lastSearch;
 		}
 	});
 	feed.render(document.body);

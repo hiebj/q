@@ -1,6 +1,6 @@
-// Q.Validator is a generalized javascript form validator using Q.
+// Q.Validator is a generalized JavaScript form validator using Q.
 // @author hiebj
-Q.Validator = Q.extend({
+Q.Validator = Q.define({
 	// The form this validator is responsible for managing
 	form: undefined,
 	// The submit button for the form, if there is any (in reality this could be any type of element).
@@ -24,18 +24,17 @@ Q.Validator = Q.extend({
 	// Default error message for validators that don't return a special message.
 	defaultErrorMsg: 'This field is required',
 	
+	// HTML template for error messages
+	msgTpl: '<span id="{msgId}" class="{msgCls}">{error}</span>',
+	
 	// Initialization function, called by the constructor
-	init: function(config) {
-		Q.apply(this, config);
+	constructor: function Validator(config) {
+		Q.copy(this, config);
 		var form = this.form,
 			submit = this.submit;
 		this.id = Q.id(this.idPrefix);
-		if (!Q.isDom(form)) {
-			this.form = Q.get(form) || document.forms[form];
-		}
-		if (submit && !Q.isDom(submit)) {
-			this.submit = Q.get(submit) || this.form[submit];
-		}
+		form = this.form = new Q(form);
+		submit = this.submit = submit ? new Q(submit) : submit;
 		// Internal validation map, to keep track of valid fields (see #validate).
 		// Used by #validateForm to check overall form validity.
 		this.valid = {};
@@ -48,14 +47,14 @@ Q.Validator = Q.extend({
 	// Bind listeners to every input with a configured validator.
 	bindEvents: function() {
 		var field,
-			handler = function(e) {
-				this.validate(Q.getTarget(e));
+			handler = function(target, e) {
+				this.validate(target);
 			};
 		for (var fieldName in this.validators) {
-			field = this.form[fieldName];
+			field = this.form.dom[fieldName];
 			if (field) {
 				// Validate the field on change, keyup and blur. Overkill, but gets maximum coverage.
-				Q.on(field, {
+				Q(field).on({
 					keyup: handler,
 					change: handler,
 					blur: handler,
@@ -91,19 +90,17 @@ Q.Validator = Q.extend({
 	 * In production, tooltips would make an attractive alternative.
 	 */
 	setError: function(field, error) {
-		// TODO we need to use safe addCls/removeCls functions
-		field.className = this.invalidCls;
 		var msgId = this.msgId(field),
-			msgEl = Q.get(msgId);
-		if (!msgEl) {
-			Q.add(field.parentNode, msgEl = Q.dom({
-				tag: 'span',
-				id: msgId,
-				className: this.msgCls,
-				items: error
-			}));
+			msgEl = Q(msgId);
+		if (msgEl) {
+			msgEl.clear().add(error);
+			Q(field).addCls(this.invalidCls);
 		} else {
-			msgEl.innerHTML = error;
+			Q(field).addCls(this.invalidCls).up().add(Q.tpl(this.msgTpl, {
+				msgId: msgId,
+				msgCls: this.msgCls,
+				error: error
+			}));
 		}
 	},
 	
@@ -117,11 +114,11 @@ Q.Validator = Q.extend({
 	 * This could be overridden on a case-by-case basis or rewritten to have a more general implementation.
 	 */
 	clearError: function(field) {
-		var msgEl = Q.get(this.msgId(field));
+		var msgEl = Q(this.msgId(field));
 		if (msgEl) {
-			msgEl.parentNode.removeChild(msgEl);
+			msgEl.removeSelf();
 		}
-		field.className = '';
+		Q(field).removeCls(this.invalidCls);
 	},
 	
 	// Post-validation function to check if the overall validity of the form has changed.
@@ -133,13 +130,8 @@ Q.Validator = Q.extend({
 				break;
 			}
 		}
-		this.setSubmitEnabled(!!valid);
-	},
-	
-	// Toggles the enabled/disabled status of the submit button.
-	setSubmitEnabled: function(enabled) {
 		if (this.submit) {
-			this.submit.disabled = !enabled;
+			Q(this.submit).setDisabled(!valid);
 		}
 	}
 });

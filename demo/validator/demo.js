@@ -1,19 +1,22 @@
-Q.on(window, 'load', function() {
+Q(window).on('load', function() {
 	var specialRe = /[^\w\d]/
 		// Took this from http://www.regular-expressions.info/email.html
 		emailRe = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
 		// This one was the first result on this search: http://regexlib.com/Search.aspx?k=phone&c=-1&m=5&ps=20
-		phoneRe = /^(?:\([2-9]\d{2}\)\ ?|[2-9]\d{2}(?:\-?|\ ?))[2-9]\d{2}[- ]?\d{4}$/;
+		phoneRe = /^(?:\([2-9]\d{2}\)\ ?|[2-9]\d{2}(?:\-?|\ ?))[2-9]\d{2}[- ]?\d{4}$/,
+		// TODO use selectors when querying is implemented
+		form = document.forms['register'],
+		submit = form['submit'];
 	
-	document.forms['register'].onsubmit = function (e) {
+	form.onsubmit = function (e) {
 		// We would handle form submit with ajax here; in this case we're just stopping the submit action
 		return false;
 	};
 	
 	// Just construct the Validator and configure the validators, it does the rest.
 	new Q.Validator({
-		form: 'register',
-		submit: 'submit',
+		form: form,
+		submit: submit,
 		validators: {
 			// Validator for the username field.
 			// Requirements: must not contain whitespace or special characters.

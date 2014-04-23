@@ -1,71 +1,255 @@
 // Q is a very small JavaScript framework.
 // @author hiebj
 (function() {
-	var extending = false;
-	function Q() {
-		if (!extending) throw 'Thou shalt not instantiate the Q';
+	function copy(to, from) {
+		return copyIf(to, from, function() {
+			return true;
+		});
 	}
-	// Property merging function
-	function apply(o1, o2) {
-		if (o1 && o2) {
-			for (var property in o2) {
-				o1[property] = o2[property];
+	
+	function copyIf(to, from, condition, scope) {
+		if (to && from) {
+			condition = condition || function(property, to, from) {
+				return to[property] === undefined;
+			};
+			for (var property in from) {
+				if (condition.call(scope || this, property, to, from)) {
+					to[property] = from[property];
+				}
 			}
 		}
-		return o1;
-	};
-	Q.extend = function(definition) {
-		var Superclass = this,
-			Subclass = function Object() {
-				if (!extending && this.init) {
-					this.init.apply(this, arguments);
-				}
-			};
-		extending = true;
-		Subclass.prototype = new Superclass();
-		extending = false;
-		apply(Subclass.prototype, definition);
-		Subclass.prototype.$super = Superclass.prototype;
-		// Because the prototype's constructor is still Superclass.prototype.constructor at this point
-		Subclass.prototype.constructor = Subclass;
-		Subclass.extend = Superclass.extend;
-		return Subclass;
-	};
-	// TODO Q.constructor.mixin(target)
-	// TODO Q.Q() or Q.inherit() that returns an extendable, mixable wrapper around a non-Q javascript object
-	// TODO safe addCls and removeCls functions
-	Q = Q.extend({
-		apply: apply,
-		
-		extend: function(definition) {
-			return Q.$super.constructor.extend(definition);
-		},
-		
-		isQ: function(o) {
-			return o instanceof Q.$super.constructor;
-		},
-		
-		intercept: function(target, interceptors) {
-			target = typeof target === 'function' ? target.prototype : target;
-			for (var intercept in interceptors) {
-				// interceptor, intercepted, and our proxy function need to be declared in their own scope to prevent conflict
-				(function() {
-					var interceptor = interceptors[intercept],
-						intercepted = target[intercept];
-					target[intercept] = function() {
-						this.$proceed = function() {
-							return intercepted.apply(this, arguments);
-						};
-						var returnValue = interceptor.apply(this, arguments);
-						delete this.$proceed;
-						return returnValue;
-					};
-				})();
+		return to;
+	}
+	
+	function isDom(o) {
+		return o instanceof Node || o === window;
+	}
+	
+	function isEmpty(value) {
+		return (value === null) || 
+				(value === undefined) ||
+				(value === '') ||
+				(isArray(value) && value.length === 0);
+	}
+	
+	function isArray(value) {
+		if ('isArray' in Array) {
+			return Array.isArray(value);
+		} else {
+			return toString.call(value) === '[object Array]';
+		}
+	}
+	
+	function each(array, fn, scope) {
+		array = toArray(array);
+		for (var i = 0; i < array.length; i++) {
+			if (fn.call(scope || this, array[i], array) === false) {
+				return i;
 			}
+		}
+		return true;
+	}
+	
+	function toArray(value) {
+		if (!isArray(value)) {
+			// TODO copy any iterable into a new array, not just NodeList
+			if (value instanceof NodeList) {
+				var copy = [];
+				for (var i = 0; i < value.length; i++) {
+					copy[i] = value[i];
+				}
+				value = copy;
+			} else {
+				value = [ value ];
+			}
+		}
+		return value;
+	}
+	
+	function define(definition) {
+		var Superclass = definition.extend || Object,
+			Subclass = definition.constructor,
+			$proto = create(Superclass),
+			$mixins = definition.mixins,
+			$statics = definition.statics;
+		Superclass = typeof Superclass === 'function' ? Superclass : Superclass.constructor;
+		Subclass = typeof Subclass === 'function' ? Subclass : createConstructor(Subclass);
+		// Clone the definition so we can manipulate it
+		definition = copyIf({
+			// Keep a reference to the original definition in the prototype
+			$def: definition,
+			$super: Superclass.prototype,
+			constructor: Subclass,
+		}, definition);
+		delete definition.mixins;
+		delete definition.statics;
+		copy($proto, definition);
+		Subclass.prototype = $proto;
+		mixin(Subclass, $mixins);
+		if ($statics) {
+			// Never override an existing property on a function (e.g. prototype, name, apply, call)
+			copyIf(Subclass, $statics).$statics = $statics;
+		}
+		return Subclass;
+	}
+	
+	function create(o) {
+		return typeof o !== 'function' ? o : Object.create ? Object.create(o.prototype) : new o();
+	}
+	
+	function createConstructor(name) {
+		name = typeof name === 'string' ? name : 'Object';
+		if (name.match(/[^\w\d\$]/)) throw 'Constructor names cannot contain special characters: ' + name + '()';
+		// Using eval to define a properly named function
+		return eval('function ' + name + '(){defaultConstructor.apply(this,arguments);}');
+	}
+	
+	function defaultConstructor() {
+		if (this.$super) {
+			this.$super.constructor.apply(this, arguments);
+		}
+	}
+	
+	function mixin(Subclass, mixins) {
+		if (mixins) {
+			if (!isArray(mixins)) {
+				mixins = [ mixins ];
+			}
+			each(mixins, function(Mixin) {
+				var mixin = create(Mixin);
+				mixin.$mixins = {};
+				copyIf(Subclass.prototype, mixin).$mixins[Mixin] = mixin;
+			});
+		}
+	}
+	
+	// Cross-browser utility to retrieve the target of a fired event.
+	function getEventTarget(e) {
+		e = /* Everything else */ e || /* IE */ window.event;
+		return /* Everything else */ e.target || /* IE */ e.srcElement;
+	}
+	
+	// TODO defer/delay
+	
+	var flyweight,
+		renderTarget;
+	window.Q = define({
+		constructor: function Q(dom) {
+			var q = this instanceof Q ? this : (flyweight || (flyweight = new Q()));
+			if (Q.isDom(dom)) {
+				q.dom = dom;
+			} else if (dom instanceof Q) {
+				q.dom = dom.dom;
+			} else {
+				q.dom = document.getElementById(dom);
+			}
+			// TODO allow single select via selector
+			if (!q.dom) {
+				// When called as a constructor, this function will always return the new instance.
+				// If they are using it to access the flyweight, this function will return null if no matching element is found.
+				q = null;
+			}
+			return q;
+		},
+		
+		isFly: function() {
+			return this === flyweight;
+		},
+		
+		// returns new Q(this.dom)
+		clone: function() {
+			return new this.constructor(this.dom);
+		},
+		
+		// returns [HTMLElement]
+		query: function(selector) {
+			return this.dom.childNodes;
+		},
+		
+		// Traversals all return the flyweight element wrapped around the target
+		down: function(selector) {
+			return this.first();
+		},
+		
+		first: function() {
+			var dom = this.dom.firstChild;
+			return dom ? Q(dom) : dom;
+		},
+		
+		last: function() {
+			var dom = this.dom.lastChild;
+			return dom ? Q(dom) : dom;
+		},
+		
+		up: function(selector) {
+			return Q(this.dom.parentNode);
+		},
+		
+		next: function(selector) {
+			var dom = this.dom.nextSibling;
+			return dom ? Q(dom) : dom;
+		},
+		
+		prev: function(selector) {
+			var dom = this.dom.previousSibling;
+			return dom ? Q(dom) : dom;
+		},
+		
+		// elements: []/Q/HTMLElement/String (HTML)
+		// before: Q/HTMLElement/Number (index)
+		add: function(elements, before) {
+			var dom = this.dom;
+			if (elements) {
+				before = before instanceof Q ? before.dom : before;
+				before = Q.isDom(before) ? before : (isNaN(before) ? false : dom.childNodes[before]);
+				Q.each(elements, function(element) {
+					if (element instanceof Q) {
+						element = element.dom;
+					}
+					if (!Q.isDom(element)) {
+						// Execute add recursively because Q.dom() returns an array
+						this.add(Q.dom(element), before);
+					} else {
+						if (before) {
+							dom.insertBefore(element, before);
+						} else {
+							dom.appendChild(element);
+						}
+					}
+				}, this);
+			}
+			return this;
+		},
+		
+		// elements: []/Q/HTMLElement
+		remove: function(elements) {
+			var dom = this.dom;
+			if (elements) {
+				Q.each(elements, function(element) {
+					if (element instanceof Q) {
+						element = Q.dom;
+					}
+					dom.removeChild(element);
+				});
+			}
+			return this;
+		},
+		
+		removeSelf: function() {
+			this.dom.parentNode.removeChild(this.dom);
+			return this;
+		},
+		
+		clear: function() {
+			return this.remove(this.dom.childNodes);
 		},
 		
 		/* Cross-browser event binder.
-		 * Can assign multiple listeners at once by passing an object for the 'event' parameter.
+		 * Handler functions are executed with two parameters:
+		 *		target,		The HTMLElement target of the event
+		 *		e,			The browser Event object
+		 *
+		 * This function can assign multiple listeners at once by passing a compound object as the only parameter.
 		 * The format for a multiple assignment object is as follows: {
 		 *		eventname1: handlerFn1,
 		 *		eventname2: handlerFn2,
@@ -76,223 +260,238 @@
 		 *		}
 		 * }
 		 */
-		on: function (element, event, handler, scope) {
+		on: function (event, handler, scope) {
 			if (typeof event === 'object') {
 				// Batch of events passed as a mapping object
 				for (var eventName in event) {
 					handler = event[eventName].fn || event[eventName];
 					if (typeof handler === 'function') {
 						scope = event[eventName].scope || event.scope;
-						Q.on(element, eventName, handler, scope);
+						this.on(eventName, handler, scope);
 					}
 				}
 			} else {
 				// Single event binding
 				// Wrapper handler to execute the passed handler in the given scope
 				var scopingHandler = function(e) {
-					scope = scope || Q.getTarget(e);
-					return handler.apply(scope, arguments);
-				};
-				if (element.addEventListener) {
+						var target = getEventTarget(e);
+						scope = scope || target;
+						return handler.call(scope, target, e);
+					},
+					dom = this.dom;
+				if (dom.addEventListener) {
 					// IE-style events
-					element.addEventListener(event, scopingHandler, false);
+					dom.addEventListener(event, scopingHandler, false);
 				} else {
 					// Everything else
-					element.attachEvent('on' + event, scopingHandler);
+					dom.attachEvent('on' + event, scopingHandler);
 				}
 			}
+			return this;
 		},
 		
-		// Cross-browser utility to retrieve the target of a fired event.
-		getTarget: function (e) {
-			e = /* Everything else */ e || /* IE */ window.event;
-			return /* Everything else */ e.target || /* IE */ e.srcElement;
+		/* TODO un
+		un: function() {
+			return this;
 		},
+		*/
 		
-		get: function(id) {
-			return document.getElementById(id);
-		},
-		
-		id: function(prefix) {
-			var idSeq = this.idSeq = this.idSeq || {};
-			idSeq[prefix] = idSeq[prefix] || 0;
-			return prefix + idSeq[prefix]++;
-		},
-		
-		isDom: function(el) {
-			return el instanceof HTMLElement;
-		},
-		
-		isEmpty: function(value) {
-			return (value === null) || 
-					(value === undefined) ||
-					(value === '') ||
-					(Q.isArray(value) && value.length === 0);
-		},
-		
-		isArray: function(value) {
-			if ('isArray' in Array) {
-				return Array.isArray(value);
-			} else {
-				return toString.call(value) === '[object Array]';
-			}
-        },
-		
-		each: function(array, fn, scope) {
-			var i;
-			for (i = 0;i < array.length; i++) {
-				if (fn.call(scope, array[i]) === false) {
-					return i;
+		addCls: function(cls) {
+			var className = this.dom.className || '';
+			if (className.indexOf(cls) === -1) {
+				if (className.length) {
+					className += ' ';
 				}
+				className += cls + ' ';
 			}
+			className = className.replace(/\s{2,}/g, ' ');
+			this.dom.className = className;
+			return this;
+		},
+		
+		removeCls: function(cls) {
+			var className = this.dom.className || '';
+			className = className.replace(cls, '');
+			className = className.replace(/\s{2,}/g, ' ');
+			this.dom.className = className;
+			return this;
+		},
+		
+		is: function(selector) {
 			return true;
 		},
 		
-		/* Convenience builder for creating entire DOM structures from javascript object definitions.
-		 * The format for an argument to this function is as follows: {
-		 *		tag,		The name of the element to create (e.g. 'div' or 'span')
-		 *		...,		Any number of HTML attributes to apply to the created element (e.g. className, id, or a style object)
-		 *		items		A collection of children to create or append recursively (either descriptor objects or HTMLElement instances)
-		 *	}
-		 */
-		dom: function(config) {
-			var tag = config.tag || config,
-				items = config.items,
-				listeners = config.listeners,
-				el = document.createElement(tag);
-			// Clone the config so we don't cause side effects
-			config = Q.apply({}, config);
-			delete config.tag;
-			delete config.items;
-			delete config.listeners;
-			Q.apply(el, config);
-			Q.add(el, items);
-			if (listeners) {
-				Q.on(el, listeners);
-			}
-			return el;
+		show: function() {
+			return this.setVisible(true);
 		},
 		
-		/* A utility for adding children to an existing DOM node.
-		 * It enhances native JS by allowing a collection of nodes to be appended at once, and also by allowing node *definitions* in addition to actual node instances.
-		 * Any passed node definitions will be created into actual HTMLElement instances by invoking the #dom function.
-		 * Returns an array containing the added HTMLElements, if any.
-		 */
-		add: function(parent, items, index) {
-			var added = [],
-				before;
-			if (items) {
-				if (!Q.isArray(items)) {
-					items = [ items ];
+		hide: function() {
+			return this.setVisible(false);
+		},
+		
+		// TODO visibility mode support (display, visibility, offsets)
+		setVisible: function(visible) {
+			this.dom.hidden = !visible;
+			return this;
+		},
+		
+		enable: function() {
+			return this.setDisabled(false);
+		},
+		
+		disable: function() {
+			return this.setDisabled(true);
+		},
+		
+		setDisabled: function(disabled) {
+			this.dom.disabled = !!disabled;
+			return this;
+		},
+		
+		focus: function() {
+			this.dom.focus();
+			return this;
+		},
+		
+		// TODO box management
+		
+		statics: {
+			copy: copy,
+			copyIf: copyIf,
+			isDom: isDom,
+			isEmpty: isEmpty,
+			isArray: isArray,
+			each: each,
+			toArray: toArray,
+			define: define,
+			mixin: mixin,
+			
+			intercept: function(target, interceptors) {
+				target = typeof target === 'function' ? target.prototype : target;
+				for (var intercept in interceptors) {
+					// interceptor, intercepted, and our proxy function need to be declared in their own scope to prevent conflict
+					(function() {
+						var interceptor = interceptors[intercept],
+							$intercepted = target[intercept];
+						target[intercept] = function() {
+							this.$proceed = function() {
+								delete this.$proceed;
+								return $intercepted.apply(this, arguments);
+							};
+							var returnValue = interceptor.apply(this, arguments);
+							delete this.$proceed;
+							return returnValue;
+						};
+						target[intercept].$intercepted = $intercepted;
+					})();
 				}
-				before = isNaN(index) ? false : parent.childNodes[index];
-				Q.each(items, function(item) {
-					if (!Q.isDom(item)) {
-						if (typeof item === 'string') {
-							item = document.createTextNode(item);
-						} else if (typeof item ==='object') {
-							item = Q.dom(item);
-						}
-					}
-					if (before) {
-						parent.insertBefore(item, before);
-					} else {
-						parent.appendChild(item);
-					}
-					added.push(item);
-				});
-			}
-			return added;
-		},
-		
-		// Convenience function to clear all children from a given node
-		clear: function(parent) {
-			while (parent.hasChildNodes()) {
-				parent.removeChild(parent.lastChild);
-			}
-		},
-	
-		/* Convenience function to make simple AJAX requests slightly less painful.
-		 * The format for an argument to this function is as follows: {
-		 *		method,		Request method, e.g. GET PUT POST DELETE. Defaults to GET
-		 *		url,		Target for the request
-		 *		params,		URL parameters (query string parameters) to append to the URL
-		 *		body,		Body parameter passed directly to XMLHttpRequest.send()
-		 *		json,		Object that will be converted to a JSON string and sent in the message body
-		 *		callback,	Callback to be executed when the request is complete (readyState = 4).
-		 *					The parameter to the callback will contain the following properties of the XMLHttpRequest: {
-		 *						responseText,
-		 *						responseXML,
-		 *						status,
-		 *						statusText
-		 *					}
-		 *		scope		'this' reference to use in the callback
-		 */
-		ajax: function(request) {
-			var xmlhttp = new XMLHttpRequest(),
-				body = request.json ? JSON.stringify(request.json) : request.body,
-				url = Q.urlAppend(request.url, request.params);
-			xmlhttp.open(request.method || 'GET', url, true);
-			xmlhttp.onreadystatechange = function() {
-				if (xmlhttp.readyState === 4 && request.callback) {
-					request.callback.call(request.scope || this, {
-						responseText: xmlhttp.responseText,
-						responseXML: xmlhttp.responseXML,
-						status: xmlhttp.status,
-						statusText: xmlhttp.statusText
+			},
+			
+			query: function(selector, root) {
+				return Q(root || document.body).query(selector);
+			},
+			
+			id: function(prefix) {
+				var idSeq = this.idSeq = this.idSeq || {};
+				idSeq[prefix] = idSeq[prefix] || 0;
+				return prefix + idSeq[prefix]++;
+			},
+			
+			tpl: function(tpl, params) {
+				if (Q.isArray(tpl)) {
+					tpl = tpl.join('');
+				}
+				if (tpl && params && typeof tpl === 'string') {
+					tpl = tpl.replace(/\{.*?\}/g, function(matched) {
+						// Cut off the matched brackets {}
+						matched = matched.substring(1, matched.length - 1);
+						return params[matched];
 					});
 				}
-			};
-			xmlhttp.send(body);
-			return xmlhttp;
-		},
-		
-		urlAppend: function(url, params) {
-			if (typeof params === 'object') {
-				for (var param in params) {
-					url = Q.urlAppend(url, param + '=' + params[param]);
-				}
-			} else if (!Q.isEmpty(params)) {
-				url += (url.indexOf('?') !== -1 ? '&' : '?') + params;
-            }
-            return url;
-		},
-		
-		/* Convenience function to make simple JSONP requests.
-		 * The format for an argument to this function is as follows: {
-		 *		url,			Target for the request
-		 *		params,			URL parameters (query string parameters) to append to the URL
-		 *		callbackParam,	JSONP callback parameter name to use when creating the request.
-		 *						If this parameter is included, a temporary handler will be generated for the request, which will relay to the passed 'callback'.
-		 *						If this parameter is missing, the 'callback' and 'scope' parameters will be ignored, and it is assumed that an appropriate handler is already set up and passed to the request in the 'params' object.
-		 *		callback,		Callback to be executed when the request is complete (when the <script> loads).
-		 *						The callback will be relayed the same arguments passed to the generated JSONP handler.
-		 *		scope			'this' reference to use in the callback
-		 */
-		jsonp: function(request) {
-			var params = Q.apply({}, request.params),
-				callbackParam = request.callbackParam,
-				handlerId,
-				script;
-			if (!Q.isEmpty(callbackParam)) {
-				handlerId = Q.id('_jsonp');
-				Q[handlerId] = function() {
-					request.callback.apply(request.scope || this, arguments);
-					script.parentNode.removeChild(script);
-					delete Q[handlerId];
+				return tpl;
+			},
+			
+			dom: function(html) {
+				renderTarget = renderTarget || document.createElement('div');
+				renderTarget.innerHTML = html;
+				return renderTarget.childNodes;
+			},
+			
+			on: function(selector, event, handler, scope) {
+				console.log('global on', arguments.callee.caller);
+				Q.each(Q.query(selector), function(el) {
+					el.on(event, handler, scope);
+				});
+			},
+			
+			/* Convenience function to make simple AJAX requests.
+			 * The following properties are recognized on the passed request object:
+			 *		method,		Request method, e.g. GET PUT POST DELETE. Defaults to GET
+			 *		url,		Target for the request
+			 *		params,		URL parameters (query string parameters) to append to the URL
+			 *		body,		Body parameter passed directly to XMLHttpRequest.send()
+			 *		json,		Object that will be converted to a JSON string and sent in the message body
+			 *		callback,	Callback to be executed when the request is complete (readyState = 4). The callback will be passed the XMLHttpRequest object as the only parameter.
+			 *		scope		'this' reference to use in the callback
+			 */
+			ajax: function(request) {
+				var xmlhttp = new XMLHttpRequest(),
+					body = request.json ? JSON.stringify(request.json) : request.body,
+					url = Q.urlAppend(request.url, request.params);
+				xmlhttp.open(request.method || 'GET', url, true);
+				xmlhttp.onreadystatechange = function() {
+					if (xmlhttp.readyState === 4 && request.callback) {
+						request.callback.call(request.scope || this, xmlhttp);
+					}
 				};
-				params[callbackParam] = 'Q.' + handlerId;
-			}
-			script = Q.add(document.head, {
-				tag: 'script',
-				type: 'text/javascript',
-				src: Q.urlAppend(request.url, params)
-			})[0];
-			return script;
+				xmlhttp.send(body);
+				return xmlhttp;
+			},
+			
+			/* Convenience function to make simple JSONP requests.
+			 * The following properties are recognized on the passed request object:
+			 *		url,			Target for the request
+			 *		params,			URL parameters (query string parameters) to append to the URL
+			 *		callbackParam,	JSONP callback parameter name to use when creating the request.
+			 *						If this parameter is included, a temporary handler will be generated for the request, which will relay to the passed 'callback'.
+			 *						If this parameter is missing, the 'callback' and 'scope' parameters will be ignored, and it is assumed that an appropriate handler is already set up and passed to the request in the 'params' object.
+			 *		callback,		Callback to be executed when the request is complete (when the <script> loads).
+			 *						The callback will be relayed the same arguments passed to the generated JSONP handler.
+			 *		scope			'this' reference to use in the callback
+			 */
+			jsonp: function(request) {
+				var params = Q.copy({}, request.params),
+					callbackParam = request.callbackParam,
+					handlerId,
+					script;
+				if (!Q.isEmpty(callbackParam)) {
+					handlerId = Q.id('_jsonp');
+					Q.jsonp[handlerId] = function() {
+						request.callback.apply(request.scope || this, arguments);
+						script.parentNode.removeChild(script);
+						delete Q.jsonp[handlerId];
+					};
+					params[callbackParam] = 'Q.jsonp.' + handlerId;
+				}
+				script = document.createElement('script');
+				script.type = 'text/javascript';
+				script.src = Q.urlAppend(request.url, params);
+				document.head.appendChild(script);
+				return script;
+			},
+			
+			urlAppend: function(url, params) {
+				if (typeof params === 'object') {
+					for (var param in params) {
+						url = Q.urlAppend(url, param + '=' + params[param]);
+					}
+				} else if (!Q.isEmpty(params)) {
+					url += (url.indexOf('?') !== -1 ? '&' : '?') + params;
+				}
+				return url;
+			},
+			
+			emptyFn: function() {}
 		}
 	});
-	// Mask the Q's constructor
-	var proto = Q.prototype;
-	Q = this.Q = new Q();
-	proto.constructor = proto.$super.constructor;
 })();
