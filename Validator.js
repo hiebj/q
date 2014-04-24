@@ -27,7 +27,6 @@ Q.Validator = Q.define({
 	// HTML template for error messages
 	msgTpl: '<span id="{msgId}" class="{msgCls}">{error}</span>',
 	
-	// Initialization function, called by the constructor
 	constructor: function Validator(config) {
 		Q.copy(this, config);
 		var form = this.form,
@@ -85,9 +84,9 @@ Q.Validator = Q.define({
 	},
 	
 	/* Renders the visual impact of the error on the view.
-	 * In this case we set an invalid class on the field and add an error message <span> to the parent <li> node.
+	 * In this case we set an invalid class on the field and add an error message <span> to the parent node.
 	 * This could be overridden on a case-by-case basis or rewritten to have a more general implementation.
-	 * In production, tooltips would make an attractive alternative.
+	 * Tooltips would make an attractive alternative (and could be accomplished using CSS to position the <span> absolutely).
 	 */
 	setError: function(field, error) {
 		var msgId = this.msgId(field),
@@ -104,7 +103,7 @@ Q.Validator = Q.define({
 		}
 	},
 	
-	// Generates a message element id specific to a given field
+	// Generates a unique message element id specific to a given field
 	msgId: function(field) {
 		return this.id + this.msgIdSuffix + field.name;
 	},
