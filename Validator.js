@@ -13,7 +13,7 @@ Q.Validator = Q.define({
 	 */
 	validators: undefined,
 	
-	// Prefix to use when generating an id (unless one is given
+	// Prefix to use when generating an id (unless one is given).
 	idPrefix: 'q-validator-',
 	// CSS class to mark invalid fields.
 	invalidCls: 'q-validator-invalid',
