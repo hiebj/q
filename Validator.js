@@ -51,9 +51,9 @@ Q.Validator = Q.define({
 			if (field) {
 				// Validate the field on change, keyup and blur. Overkill, but gets maximum coverage.
 				Q(field).on({
-					keyup: validate,
-					change: validate,
-					blur: validate,
+					keyup: this.validate,
+					change: this.validate,
+					blur: this.validate,
 					scope: this
 				});
 			}
