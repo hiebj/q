@@ -238,7 +238,7 @@
 		},
 		
 		// The following six functions are traversals.
-		// Traversals all return the flyweight element wrapped around the matched node, or null if no matching node is found.
+		// Traversals all return the flyweight Q instance wrapped around the matched node, or null if no matching node is found.
 		// Currently, the implementation is "dumb" and literally takes one step at a time; once querying is implemented, it will allow traversal using CSS selectors.
 		down: function(selector) {
 			return this.first();
@@ -348,7 +348,8 @@
 		 *	}
 		 * }
 		 *
-		 * Example: {
+		 * Example:
+		 * Q(someNode).on({
 		 *	click: this.onClick,
 		 *	keyup: this.onKeyUp,
 		 *	scope: this,
@@ -356,7 +357,7 @@
 		 *		fn: this.mouseoverHandler.onMouseOver,
 		 *		scope: this.mouseoverHandler
 		 *	}
-		 * }
+		 * });
 		 */
 		on: function (event, handler, scope) {
 			if (typeof event === 'object') {
