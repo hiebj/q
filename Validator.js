@@ -45,18 +45,15 @@ Q.Validator = Q.define({
 	
 	// Bind listeners to every input with a configured validator.
 	bindEvents: function() {
-		var field,
-			handler = function(target, e) {
-				this.validate(target);
-			};
+		var field;
 		for (var fieldName in this.validators) {
 			field = this.form.dom[fieldName];
 			if (field) {
 				// Validate the field on change, keyup and blur. Overkill, but gets maximum coverage.
 				Q(field).on({
-					keyup: handler,
-					change: handler,
-					blur: handler,
+					keyup: validate,
+					change: validate,
+					blur: validate,
 					scope: this
 				});
 			}
