@@ -14,12 +14,12 @@ Q.chess.Chess = Q.define({
 			black = this.black;
 		pieces[white] = this.initPieces(white);
 		pieces[black] = this.initPieces(black).reverse();
-		this.player = white;
 		this.board.render();
 		this.bindEvents();
 		Q.each(pieces[white].concat(pieces[black]), function(piece) {
 			this.placePiece(piece);
 		}, this);
+		this.nextTurn();
 	},
 	
 	bindEvents: function() {
@@ -245,7 +245,7 @@ Q.chess.Chess = Q.define({
 	
 	otherPlayer: function(player) {
 		player = player || this.player;
-		if (player.toLowerCase() === this.white) {
+		if (player && player.toLowerCase() === this.white) {
 			return this.black;
 		} else {
 			return this.white;
@@ -253,7 +253,14 @@ Q.chess.Chess = Q.define({
 	},
 	
 	nextTurn: function() {
-		this.turn++;
+		if (this.player) {
+			Q.each(this.pieces[this.player], function(piece) {
+				Q(this.board.getCell(piece.pos)).removeCls(piece.clsPrefix + '-active');
+			}, this);
+		}
 		this.player = this.otherPlayer();
+		Q.each(this.pieces[this.player], function(piece) {
+			Q(this.board.getCell(piece.pos)).addCls(piece.clsPrefix + '-active');
+		}, this);
 	}
 });

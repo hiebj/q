@@ -32,18 +32,22 @@
 }
 
 .q-chess-piece {
-	cursor: pointer;
 	font-weight: bold;
 	font-family: sans-serif;
+	cursor: default;
 }
-
+.q-chess-piece.q-chess-piece-active {
+	cursor: pointer;
+}
+.q-chess-piece.q-chess-piece-active:hover {
+	background: #CB8CC0;
+}
 .q-chess-piece span {
 	display: block;
     border: 1px solid #CB8CC0;
     padding: 0px 2px;
 	text-align: center;
 }
-
 .q-chess-piece.q-chess-piece-white span {
 	color: #B565A7;
 	background: white;
