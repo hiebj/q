@@ -109,11 +109,11 @@
 		// If the passed superclass is an instance, we want to work with its constructor
 		Superclass = typeof Superclass === 'function' ? Superclass : Superclass.constructor;
 		// If the passed constructor is not a function, we need to generate a constructor
-		Subclass = typeof Subclass === 'function' ? Subclass : createConstructor(Subclass);
+		Subclass = typeof Subclass === 'function' ? Subclass : createConstructor(Subclass || Superclass);
+		// Keep a reference to the original class definition as a property on the constructor
+		Subclass.$def = definition,
 		// Clone the definition so we can manipulate it
 		definition = copyIf({
-			// Keep a reference to the original definition in the prototype (mostly for debugging)
-			$def: definition,
 			// Keep a reference to the "superclass" on the prototype (to call overridden parent functions)
 			$super: Superclass.prototype,
 			constructor: Subclass,
@@ -145,10 +145,11 @@
 	
 	// Generates a default constructor with the given name.
 	function createConstructor(name) {
-		name = typeof name === 'string' ? name : 'Object';
+		name = typeof name === 'function' ? name.name : (typeof name === 'string' ? name : 'Object');
 		if (name.match(/[^\w\d\$]/)) throw 'Constructor names cannot contain special characters: ' + name + '()';
 		// Using eval to define a properly named function
-		return eval('function ' + name + '(){defaultConstructor.apply(this,arguments);}');
+		eval('var fn = function ' + name + '(){defaultConstructor.apply(this,arguments);}');
+		return fn;
 	}
 	
 	// Default constructor; simply calls the $super constructor, if one exists.
@@ -209,11 +210,19 @@
 				q.dom = dom;
 			} else if (dom instanceof Q) {
 				q.dom = dom.dom;
-			} else {
-				q.dom = document.getElementById(dom);
+				// Unless we're creating a new instance, return the passed Q rather than the flyweight
+				q = dom;
+			} else if (typeof dom === 'string') {
+				if (dom.indexOf('<') !== -1) {
+					// It's HTML
+					// TODO find a better way to determine if it's HTML
+					q.dom = dom = Q.dom(dom)[0];
+				} else {
+					q.dom = dom = document.getElementById(dom);
+				}
+				// TODO allow single select via CSS selector (a la Y.one())
 			}
-			// TODO allow single select via CSS selector (a la Y.one())
-			if (!q.dom) {
+			if (!dom) {
 				// When called as a constructor, this function will always return the new instance.
 				// If they are using it to access the flyweight, this function will return null if no matching element is found.
 				q = null;
@@ -234,7 +243,12 @@
 		// Queries the DOM using the wrapped DOM element as the root (a la JQuery or Y.all()).
 		// TODO stub
 		query: function(selector) {
-			return this.dom.childNodes;
+			return this.children();
+		},
+		
+		// Returns the child nodes of the wrapped DOM element.
+		children: function() {
+			return Q.toArray(this.dom.childNodes);
 		},
 		
 		// The following six functions are traversals.
@@ -264,9 +278,76 @@
 			return Q(this.dom.previousSibling);
 		},
 		
+		// Returns the index of the wrapped DOM element within its parent.
+		index: function() {
+			var dom = this.dom,
+				q = this,
+				i = 0;
+			while (q = q.prev()) i++;
+			this.dom = dom;
+			return i;
+		},
+		
+		// Returns true if the wrapped DOM element is an ancestor of the given element.
+		contains: function(el) {
+			var dom = this.dom,
+				contains = Q(el).within(dom);
+			this.dom = dom;
+			return contains;
+		},
+		
+		// Returns true if the wrapped DOM element is a descendant of the given element.
+		within: function(el) {
+			var within = false;
+				dom = this.dom;
+			el = Q(el);
+			while (dom !== el.dom && el = el.up());
+			if (el && el.dom.isSameNode(dom)) {
+				within = true;
+			}
+			this.dom = dom;
+			return within;
+		},
+		
+		// Tests if the wrapped DOM element matches a passed selector (to be used during querying and traversal).
+		// TODO stub
+		is: function(selector) {
+			return true;
+		},
+		
+		// Safely and cleanly adds a *single* CSS class to the wrapped DOM element
+		// TODO support arrays or multiple whitespace-separated classes
+		addCls: function(cls) {
+			var className = this.dom.className || '';
+			if (!this.hasCls(cls)) {
+				if (className.length) {
+					className += ' ';
+				}
+				className += cls + ' ';
+			}
+			className = className.replace(/\s{2,}/g, ' ');
+			this.dom.className = className;
+			return this;
+		},
+		
+		// Returns true if the wrapped DOM element has the given CSS class.
+		hasCls: function(cls) {
+			return (this.dom.className || '').indexOf(cls) !== -1;
+		},
+		
+		// Safely and cleanly removes a *single* CSS class from the wrapped DOM element
+		// TODO support arrays or multiple whitespace-separated classes
+		removeCls: function(cls) {
+			var className = this.dom.className || '';
+			className = className.replace(cls, '');
+			className = className.replace(/\s{2,}/g, ' ');
+			this.dom.className = className;
+			return this;
+		},
+		
 		/* Appends or inserts children to the wrapped DOM element.
 		 * elements: []/Q/Node/String (HTML)
-		 *	A collection or single argument of type Q, Node or String (containing HTML); these will be appended as children to the wrapped Node
+		 *	A collection or single argument of type Q, Node or String (containing HTML); these will be appended as children to the wrapped DOM element.
 		 * before: Q/Node/Number (index)
 		 *	A Q wrapper instance, Node instance or Number index; the added elements will be inserted before this element. By default they are appended to the end.
 		 */
@@ -298,7 +379,7 @@
 		
 		// Removes a given child or set of children from the wrapped DOM element.
 		// elements: []/Q/Node
-		//	A collection or single argument of type Q or Node; these will be removed from the wrapped element.
+		//	A collection or single argument of type Q or Node; these will be removed from the wrapped DOM element.
 		remove: function(elements) {
 			var dom = this.dom;
 			if (elements) {
@@ -314,7 +395,10 @@
 		
 		// Removes the wrapped DOM element from its parent.
 		removeSelf: function() {
-			this.dom.parentNode.removeChild(this.dom);
+			var parent = this.dom.parentNode;
+			if (parent) {
+				parent.removeChild(this.dom);
+			}
 			return this;
 		},
 		
@@ -372,12 +456,11 @@
 			} else {
 				// Single event binding
 				// Wrapper handler to execute the passed handler in the given scope
-				var scopingHandler = function(e) {
-						var target = getEventTarget(e);
-						scope = scope || target;
-						return handler.call(scope, target, e);
-					},
-					dom = this.dom;
+				var dom = this.dom,
+					scopingHandler = function(e) {
+						scope = scope || dom;
+						return handler.call(scope, dom, e);
+					};
 				if (dom.addEventListener) {
 					// IE-style events
 					dom.addEventListener(event, scopingHandler, false);
@@ -394,37 +477,6 @@
 			return this;
 		},
 		*/
-		
-		// Safely and cleanly adds a *single* CSS class to the wrapped DOM element
-		// TODO support arrays or multiple whitespace-separated classes
-		addCls: function(cls) {
-			var className = this.dom.className || '';
-			if (className.indexOf(cls) === -1) {
-				if (className.length) {
-					className += ' ';
-				}
-				className += cls + ' ';
-			}
-			className = className.replace(/\s{2,}/g, ' ');
-			this.dom.className = className;
-			return this;
-		},
-		
-		// Safely and cleanly removes a *single* CSS class from the wrapped DOM element
-		// TODO support arrays or multiple whitespace-separated classes
-		removeCls: function(cls) {
-			var className = this.dom.className || '';
-			className = className.replace(cls, '');
-			className = className.replace(/\s{2,}/g, ' ');
-			this.dom.className = className;
-			return this;
-		},
-		
-		// Tests if the wrapped DOM element matches a passed selector (to be used during querying and traversal).
-		// TODO stub
-		is: function(selector) {
-			return true;
-		},
 		
 		// Shows the wrapped DOM element.
 		show: function() {
@@ -478,6 +530,7 @@
 			toArray: toArray,
 			define: define,
 			mixin: mixin,
+			getEventTarget: getEventTarget,
 			
 			/* Intercepts functions on the given target, allowing developers to implement case-by-case function overrides on either classes or instances.
 			 * target: Function/Object
@@ -572,6 +625,7 @@
 			 * Note that there is no sanitization going on here, and various versions of IE are known to be extremely picky when using innerHTML.
 			 * The basic idea is that the given string is simply crammed into a <div> that is not part of the DOM, and its resulting children are returned.
 			 * This also means that the top-level element in the given HTML string must be a valid direct descendant of a <div> (e.g. <li> will not work without a surrounding <ul> or <ol>)
+			 * TODO fallback on DOM methods to create nodes that fail with innerHTML
 			 */
 			dom: function(html) {
 				renderTarget = renderTarget || document.createElement('div');
@@ -599,6 +653,7 @@
 			 *	Body parameter passed directly to XMLHttpRequest.send(); only used for POST requests.
 			 * json: Object
 			 *	Object that will be converted to a JSON string and sent in the message body; only used for POST requests.
+			 * TODO formdata
 			 * headers: Object
 			 *	Object containing name/value header parameters to apply to the request.
 			 * callback: Function
@@ -609,7 +664,7 @@
 			 */
 			ajax: function(request) {
 				var xmlhttp = new XMLHttpRequest(),
-					method = request.method || 'GET',
+					method = (request.method || 'GET').toUpperCase(),
 					body = method === 'POST' ? (request.json ? JSON.stringify(request.json) : request.body) : undefined,
 					url = Q.urlAppend(request.url, request.params),
 					headers = request.headers || {};

@@ -1,0 +1,52 @@
+.q-chess-board {
+	border-spacing: 0px;
+	border: 1px solid #B565A7;
+}
+
+.q-chess-cell, .q-chess-cell-alt {
+	width: 1.5em;
+	height: 1.5em;
+	padding: 0.25em;
+}
+
+.q-chess-row .q-chess-cell {
+	background: white;
+	border: 1px solid white;
+}
+.q-chess-row .q-chess-cell-alt {
+	background: #B565A7;
+	border: 1px solid #B565A7;
+}
+.q-chess-row-alt .q-chess-cell-alt {
+	background: white;
+	border: 1px solid white;
+}
+.q-chess-row-alt .q-chess-cell {
+	background: #B565A7;
+	border: 1px solid #B565A7;
+}
+
+.q-chess-board .q-chess-cell-selected, .q-chess-board .q-chess-cell-legal {
+	background: #CB8CC0;
+	cursor: pointer;
+}
+
+.q-chess-piece {
+	cursor: pointer;
+	font-weight: bold;
+	font-family: sans-serif;
+	text-align: center;
+}
+
+.q-chess-piece span {
+	display: block;
+}
+
+.q-chess-piece.q-chess-piece-white span {
+	color: #B565A7;
+	background: white;
+}
+.q-chess-piece.q-chess-piece-black span {
+	background: #B565A7;
+	color: white;
+}

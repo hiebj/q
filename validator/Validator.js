@@ -110,7 +110,9 @@ Q.Validator = Q.define({
 	 * This could be overridden on a case-by-case basis or rewritten to have a more general implementation.
 	 */
 	clearError: function(field) {
+		console.log('msgId', this.msgId(field));
 		var msgEl = Q(this.msgId(field));
+		console.log('clearing error', msgEl);
 		if (msgEl) {
 			msgEl.removeSelf();
 		}
