@@ -3,7 +3,6 @@ Q.chess.Piece = Q.define({
 	pos: undefined,
 	origin: undefined,
 	player: undefined,
-	board: undefined,
 	
 	clsPrefix: 'q-chess-piece',
 	

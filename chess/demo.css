@@ -4,8 +4,8 @@
 }
 
 .q-chess-cell, .q-chess-cell-alt {
-	width: 1.5em;
-	height: 1.5em;
+	width: 1.75em;
+	height: 1.75em;
 	padding: 0.25em;
 }
 
@@ -35,11 +35,13 @@
 	cursor: pointer;
 	font-weight: bold;
 	font-family: sans-serif;
-	text-align: center;
 }
 
 .q-chess-piece span {
 	display: block;
+    border: 1px solid #CB8CC0;
+    padding: 0px 2px;
+	text-align: center;
 }
 
 .q-chess-piece.q-chess-piece-white span {
