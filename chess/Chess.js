@@ -92,7 +92,6 @@ Q.chess.Chess = Q.define({
 	},
 	
 	// Returns an array of { x, y } objects.
-	// The result is cached, and invalidated on the next turn.
 	getLegalMoves: function(piece) {
 		var x,
 			y,
@@ -231,6 +230,7 @@ Q.chess.Chess = Q.define({
 	getThreatMap: function(player) {
 		var set = {};
 		// order n3, but kind of unavoidable. We have to check every piece
+		// TODO make this more efficient
 		Q.each(this.pieces[player], function(piece) {
 			Q.each(this.getLegalMoves(piece), function(move) {
 				set[this.hashPos(move)] = true;
