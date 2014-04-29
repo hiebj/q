@@ -170,6 +170,7 @@ Q.chess.Chess = Q.define({
 				this.movePiece(piece, pos);
 				if (enemy) {
 					this.placePiece(enemy);
+					this.pieces[enemy.player].push(enemy);
 				}
 			} else if (this.isMate()) {
 				turn = false;
