@@ -301,7 +301,7 @@
 			var within = false;
 				dom = this.dom;
 			el = Q(el);
-			while (dom !== el.dom && el = el.up());
+			while (dom !== el.dom && (el = el.up()));
 			if (el && el.dom.isSameNode(dom)) {
 				within = true;
 			}
