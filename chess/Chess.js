@@ -30,19 +30,19 @@ Q.chess.Chess = Q.define({
 	
 	initPieces: function(player) {
 		// Black is on top
-		var royals = player === this.black ? [ Q.chess.King, Q.chess.Queen ] : [ Q.chess.Queen, Q.chess.King ],
-			y = player === this.black ? 0 : 7,
+		var y = player === this.black ? 0 : 7,
 			x = 0,
 			config = function (x) {
 				return { player: player, board: this, pos: { x: x, y: y } };
 			},
+			king,
 			// Add officers
 			pieces = [
 				new Q.chess.Rook(config(x++)),
 				new Q.chess.Knight(config(x++)),
 				new Q.chess.Bishop(config(x++)),
-				royals[0] = new royals[0](config(x++)),
-				royals[1] = new royals[1](config(x++)),
+				new Q.chess.Queen(config(x++)),
+				king = new Q.chess.King(config(x++)),
 				new Q.chess.Bishop(config(x++)),
 				new Q.chess.Knight(config(x++)),
 				new Q.chess.Rook(config(x++))
@@ -52,7 +52,7 @@ Q.chess.Chess = Q.define({
 		for (x = 0; x < 8; x++) {
 			pieces.push(new Q.chess.Pawn(config(x)));
 		}
-		pieces.king = royals[0] instanceof Q.chess.King ? royals[0] : royals[1];
+		pieces.king = king;
 		return pieces;
 	},
 	
