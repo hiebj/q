@@ -32,18 +32,21 @@ Q.chess.Piece = Q.define({
 	getCls: function() {
 		return this.clsPrefix + ' ' +
 				this.clsPrefix + '-' + this.player + ' ' +
-				this.clsPrefix + '-' + this.player + '-' + this.name;
+				this.clsPrefix + '-' + this.player + '-' + this.getName().toLowerCase();
+	},
+	
+	getName: function() {
+		return this.constructor.name;
 	},
 	
 	getHTML: function() {
 		// TODO use icons
-		return '<span>' + this.constructor.name.charAt(0) + '</span>';
+		return '<span>' + this.getName().charAt(0) + '</span>';
 	}
 });
 
 Q.chess.King = Q.define({
 	extend: Q.chess.Piece,
-	name: 'king',
 	constructor: 'King',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
@@ -55,7 +58,6 @@ Q.chess.King = Q.define({
 
 Q.chess.Queen = Q.define({
 	extend: Q.chess.Piece,
-	name: 'queen',
 	constructor: 'Queen',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
@@ -67,7 +69,6 @@ Q.chess.Queen = Q.define({
 
 Q.chess.Bishop = Q.define({
 	extend: Q.chess.Piece,
-	name: 'bishop',
 	constructor: 'Bishop',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
@@ -79,7 +80,6 @@ Q.chess.Bishop = Q.define({
 
 Q.chess.Knight = Q.define({
 	extend: Q.chess.Piece,
-	name: 'knight',
 	constructor: 'Knight',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
@@ -89,13 +89,12 @@ Q.chess.Knight = Q.define({
 	},
 	getHTML: function() {
 		// TODO use icons
-		return '<span>Kn</span>';
+		return '<span>' + this.getName().substr(0, 2) + '</span>';
 	}
 });
 
 Q.chess.Rook = Q.define({
 	extend: Q.chess.Piece,
-	name: 'rook',
 	constructor: 'Rook',		
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
@@ -107,7 +106,6 @@ Q.chess.Rook = Q.define({
 
 Q.chess.Pawn = Q.define({
 	extend: Q.chess.Piece,
-	name: 'pawn',
 	constructor: 'Pawn',
 	isMoveLegal: function(move, attack) {
 		var first = this.pos.y === this.origin.y,

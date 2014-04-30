@@ -60,6 +60,36 @@
 		return true;
 	}
 	
+	// Removes the given item(s) from the given array. Optionally uses a comparator to determine equality.
+	function remove(array, items, comparator, scope) {
+		var index;
+		items = toArray(items);
+		scope = scope || this;
+		each(array, function(item) {
+			if ((index = indexOf(items, item, comparator, scope)) !== -1) {
+				array.splice(index, 1);
+			}
+		});
+	}
+	
+	// Returns the index of a given item within the given iterable. Optionally uses a comparator to determine equality.
+	function indexOf(array, compare, comparator, scope) {
+		var index;
+		if (comparator) {
+			scope = scope || this;
+			index = each(array, function(compareTo) {
+				if (comparator.call(scope, compareTo, compare)) {
+					return false;
+				}
+			});
+			index = index === true ? -1 : index;	
+		} else {
+			// Use indexOf for speed
+			index = array.indexOf(compare);
+		}
+		return index;
+	}
+	
 	// Converts a value to an Array if it is not one.
 	// Single values will be returned as the sole element of an Array, while other iterables (e.g. NodeList) are copied into a new Array.
 	// Designed to simplify code which is intended to handle either collections or single arguments.
@@ -527,6 +557,8 @@
 			isEmpty: isEmpty,
 			isArray: isArray,
 			each: each,
+			remove: remove,
+			indexOf: indexOf,
 			toArray: toArray,
 			define: define,
 			mixin: mixin,
