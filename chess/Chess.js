@@ -1,5 +1,4 @@
-Q.chess = Q.chess || {};
-Q.chess.Chess = Q.define({
+Q.ns('Q.chess').Chess = Q.define({
 	white: 'white',
 	black: 'black',
 	
@@ -126,11 +125,11 @@ Q.chess.Chess = Q.define({
 	
 	removePiece: function(piece) {
 		Q.remove(this.pieces[piece.player], piece);
-		Q(this.board.getCell(piece.pos)).removeCls(piece.getCls()).clear();
+		Q(this.board.getCell(piece.pos)).removeCls(piece.getCls()).removeCls(this.activeCls(piece)).clear();
 	},
 	
 	movePiece: function(piece, move) {
-		Q(this.board.getCell(piece.pos)).removeCls(piece.getCls()).clear();
+		Q(this.board.getCell(piece.pos)).removeCls(piece.getCls()).removeCls(this.activeCls(piece)).clear();
 		this.placePiece(piece, move);
 	},
 	
@@ -149,15 +148,19 @@ Q.chess.Chess = Q.define({
 		}
 	},
 	
+	activeCls: function(piece) {
+		return piece.clsPrefix + '-active';
+	},
+	
 	nextTurn: function() {
 		if (this.player) {
 			Q.each(this.pieces[this.player], function(piece) {
-				Q(this.board.getCell(piece.pos)).removeCls(piece.clsPrefix + '-active');
+				Q(this.board.getCell(piece.pos)).removeCls(this.activeCls(piece));
 			}, this);
 		}
 		this.player = this.otherPlayer();
 		Q.each(this.pieces[this.player], function(piece) {
-			Q(this.board.getCell(piece.pos)).addCls(piece.clsPrefix + '-active');
+			Q(this.board.getCell(piece.pos)).addCls(this.activeCls(piece));
 		}, this);
 	}
 });

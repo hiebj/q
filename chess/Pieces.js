@@ -1,5 +1,4 @@
-Q.chess = Q.chess || {};
-Q.chess.Piece = Q.define({
+Q.ns('Q.chess').Piece = Q.define({
 	pos: undefined,
 	origin: undefined,
 	player: undefined,
@@ -45,7 +44,7 @@ Q.chess.Piece = Q.define({
 	}
 });
 
-Q.chess.King = Q.define({
+Q.ns('Q.chess').King = Q.define({
 	extend: Q.chess.Piece,
 	constructor: 'King',
 	isMoveLegal: function(move) {
@@ -56,7 +55,7 @@ Q.chess.King = Q.define({
 	}
 });
 
-Q.chess.Queen = Q.define({
+Q.ns('Q.chess').Queen = Q.define({
 	extend: Q.chess.Piece,
 	constructor: 'Queen',
 	isMoveLegal: function(move) {
@@ -67,7 +66,7 @@ Q.chess.Queen = Q.define({
 	}
 });
 
-Q.chess.Bishop = Q.define({
+Q.ns('Q.chess').Bishop = Q.define({
 	extend: Q.chess.Piece,
 	constructor: 'Bishop',
 	isMoveLegal: function(move) {
@@ -78,7 +77,7 @@ Q.chess.Bishop = Q.define({
 	}
 });
 
-Q.chess.Knight = Q.define({
+Q.ns('Q.chess').Knight = Q.define({
 	extend: Q.chess.Piece,
 	constructor: 'Knight',
 	isMoveLegal: function(move) {
@@ -93,7 +92,7 @@ Q.chess.Knight = Q.define({
 	}
 });
 
-Q.chess.Rook = Q.define({
+Q.ns('Q.chess').Rook = Q.define({
 	extend: Q.chess.Piece,
 	constructor: 'Rook',		
 	isMoveLegal: function(move) {
@@ -104,7 +103,7 @@ Q.chess.Rook = Q.define({
 	}
 });
 
-Q.chess.Pawn = Q.define({
+Q.ns('Q.chess').Pawn = Q.define({
 	extend: Q.chess.Piece,
 	constructor: 'Pawn',
 	isMoveLegal: function(move, attack) {

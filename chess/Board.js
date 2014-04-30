@@ -1,5 +1,4 @@
-Q.chess = Q.chess || {};
-Q.chess.Board = Q.define({
+Q.ns('Q.chess').Board = Q.define({
 	renderTo: undefined,
 	
 	boardCls: 'q-chess-board',

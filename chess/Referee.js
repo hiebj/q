@@ -1,5 +1,4 @@
-Q.chess = Q.chess || {};
-Q.chess.Referee = Q.define({
+Q.ns('Q.chess').Referee = Q.define({
 	constructor: function Referee(chess) {
 		this.chess = chess;
 	},

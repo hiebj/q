@@ -61,15 +61,12 @@
 	}
 	
 	// Removes the given item(s) from the given array. Optionally uses a comparator to determine equality.
-	function remove(array, items, comparator, scope) {
-		var index;
-		items = toArray(items);
-		scope = scope || this;
-		each(array, function(item) {
-			if ((index = indexOf(items, item, comparator, scope)) !== -1) {
-				array.splice(index, 1);
-			}
-		});
+	function remove(array, item, comparator, scope) {
+		var index = indexOf(array, item, comparator, scope);
+		if (index !== -1) {
+			array.splice(index, 1);
+		}
+		return array;
 	}
 	
 	// Returns the index of a given item within the given iterable. Optionally uses a comparator to determine equality.
@@ -78,7 +75,7 @@
 		if (comparator) {
 			scope = scope || this;
 			index = each(array, function(compareTo) {
-				if (comparator.call(scope, compareTo, compare)) {
+				if (comparator.call(scope, compareTo, compare) === true) {
 					return false;
 				}
 			});
@@ -156,6 +153,8 @@
 		copy($proto, definition);
 		// Assign the prototype to the new class' constructor
 		Subclass.prototype = $proto;
+		// Set the 'name' property (IE does not have a constructor name property)
+		Subclass.name = Subclass.name || getName(Subclass);
 		// Apply mixins
 		mixin(Subclass, $mixins);
 		// Apply statics
@@ -171,6 +170,11 @@
 	// Creates a shell or empty instance of an object to use as a prototype.
 	function proto(o) {
 		return typeof o !== 'function' ? o : Object.create ? Object.create(o.prototype) : new o();
+	}
+	
+	function getName(constructor) { 
+		var results = (/function (.{1,})\(/).exec(constructor.toString());
+		return (results && results.length > 1) ? results[1] : '';
 	}
 	
 	// Generates a default constructor with the given name.
@@ -213,6 +217,19 @@
 	function getEventTarget(e) {
 		e = /* Everything else */ e || /* IE */ window.event;
 		return /* Everything else */ e.target || /* IE */ e.srcElement;
+	}
+	
+	// Utility function to guarantee the existence of namespaces.
+	// Example: Q.ns('Q.chess').Chess = Q.define(...);
+	function namespace(namespace) {
+		var names = namespace.split('.').reverse(),
+			space = window,
+			name;
+		while (names.length) {
+			name = names.pop();
+			space = space[name] = space[name] || {};
+		}
+		return space;
 	}
 	
 	// TODO defer/delay/buffer utilities
@@ -563,6 +580,8 @@
 			define: define,
 			mixin: mixin,
 			getEventTarget: getEventTarget,
+			namespace: namespace,
+			ns: namespace,
 			
 			/* Intercepts functions on the given target, allowing developers to implement case-by-case function overrides on either classes or instances.
 			 * target: Function/Object
