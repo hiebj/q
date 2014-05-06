@@ -3,10 +3,8 @@
  * Feeds in a different data format could be easily transformed to match this format.
  */
 Q.ImageFeed = Q.define({
-	// The target node into which the feed will be rendered.
-	renderTo: undefined,
-	// The id for the feed's main element.
-	id: undefined,
+	extend: Q.Container,
+	
 	/* The image feed data object to load. This is not required; the feed can be loaded later using #updateFeed.
 	 * If this property is specified at construction time, #updateFeed is called immediately.
 	 * The structure for #feed and the object parameter to #updateFeed should match Flickr feed structure: {
@@ -27,25 +25,24 @@ Q.ImageFeed = Q.define({
 	
 	// CSS classes for the feed's various elements.
 	cls: 'q-imagefeed',
+	idPrefix: 'q-imagefeed-',
 	titleCls: 'q-imagefeed-titlebar',
 	logoCls: 'q-imagefeed-logo',
-	bodyCls: 'q-imagefeed-body',
 	cardCls: 'q-imagefeed-card',
-	// Prefix string for generated ids
-	idPrefix: 'q-imagefeed-',
+	// Prefix strings for generated ids
 	cardIdPrefix: 'card-',
 	imgIdPrefix: 'img-',
 	
-	// HTML templates
-	// Main layout template for the component. Used by #render.
-	tpl: [
-		'<div id="{id}" class="{cls}">',
-			'<div class="{titleCls}"></div>',
-			'<div class="{bodyCls}"></div>',
-			'<div class="{titleCls}"></div>',
-		'</div>'
+	content: [
+		'<div class="{titleCls}"></div>',
+		{
+			constructor: Q.Container,
+			cls: 'q-imagefeed-body'
+		},
+		'<div class="{titleCls}"></div>'
 	],
 	
+	// HTML templates
 	// Template for the title bars. Used by #updateTitlebar.
 	titleTpl: [
 		'<a href="{link}">',
@@ -65,24 +62,17 @@ Q.ImageFeed = Q.define({
 	],
 	
 	constructor: function ImageFeed(config) {
-		Q.copy(this, config);
-		this.id = this.id || Q.id(this.idPrefix);
+		this.$super(arguments);
 		this.cardIdPrefix = this.id + '-' + this.cardIdPrefix;
 		this.imgIdPrefix = this.id + '-' + this.imgIdPrefix;
-		// Sequence for assigning ids to the generated wrappers.
-		this.idSeq = 0;
-		if (this.renderTo) {
-			this.render(this.renderTo);
-		}
 		if (this.feed) {
 			this.updateFeed(this.feed);
 		}
 	},
 	
-	// Creates the main DOM structure of the feed (the body and titlebars) and renders it into the renderTo target.
 	render: function(renderTo) {
-		this.renderTo = new Q(renderTo).add(Q.tpl(this.tpl, this));
-		this.el = new Q(this.id);
+		this.$super(arguments);
+		this.body = this.content[1];
 	},
 	
 	// Clears and reloads the feed for a new collection of pictures.
@@ -92,9 +82,9 @@ Q.ImageFeed = Q.define({
 		this.clear();
 		this.feed = feed;
 		this.updateTitlebar(feed);
-		for (var i = 0; i < images.length; i++) {
-			this.addImage(images[i]);
-		}
+		Q.each(images, function(image) {
+			this.body.add(this.createImage(image));
+		}, this);
 	},
 	
 	updateTitlebar: function(feed) {
@@ -115,26 +105,22 @@ Q.ImageFeed = Q.define({
 	
 	// Clears all generated HTML and resets the image id sequence.
 	clear: function() {
-		this.el.down().clear().	// head
-				next().clear().	// body
-				next().clear();	// foot
-		// Reset id sequence
-		this.idSeq = 0;
+		this.el.first().clear();
+		this.body.clear();
+		this.el.last().clear();
 		delete this.feed;
 	},
 	
 	// Renders an image into the collection.
 	// The format for the 'image' parameter should match the format described for an item in the #feed collection.
-	addImage: function(image) {
+	createImage: function(image) {
 		// If this were reused for a non-flickr feed, the image object may have a src string rather than a media object (see #feed)
-		this.el.down().next(). // body
-				// Copy the entire image object into our tpl params
-				add(Q.tpl(this.cardTpl, Q.copy({
-					src: image.src || image.media.m,
-					cardId: Q.id(this.cardIdPrefix),
-					cardCls: this.cardCls,
-					imgId: Q.id(this.imgIdPrefix),
-					titleHidden: Q.isEmpty(image.title) ? 'hidden' : ''
-				}, image)));
+		return Q.tpl(this.cardTpl, Q.copy({
+				src: image.src || image.media.m,
+				cardId: Q.id(this.cardIdPrefix),
+				cardCls: this.cardCls,
+				imgId: Q.id(this.imgIdPrefix),
+				titleHidden: Q.isEmpty(image.title) ? 'hidden' : ''
+			}, image));
 	}
 });

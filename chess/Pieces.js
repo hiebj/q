@@ -49,7 +49,7 @@ Q.ns('Q.chess').King = Q.define({
 	constructor: 'King',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
-		return this.$super.isMoveLegal.apply(this, arguments) &&
+		return this.$super(arguments) &&
 			// Can move one pace in any direction
 			(d.x <= 1 && d.y <= 1);
 	}
@@ -60,7 +60,7 @@ Q.ns('Q.chess').Queen = Q.define({
 	constructor: 'Queen',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
-		return this.$super.isMoveLegal.apply(this, arguments) &&
+		return this.$super(arguments) &&
 			// Can move in perfectly straight or diagonal lines
 			((d.x === 0 || d.y === 0) || (d.x === d.y));
 	}
@@ -71,7 +71,7 @@ Q.ns('Q.chess').Bishop = Q.define({
 	constructor: 'Bishop',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
-		return this.$super.isMoveLegal.apply(this, arguments) &&
+		return this.$super(arguments) &&
 			// Can move only in perfectly diagonal lines
 			(d.x === d.y);
 	}
@@ -82,7 +82,7 @@ Q.ns('Q.chess').Knight = Q.define({
 	constructor: 'Knight',
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
-		return this.$super.isMoveLegal.apply(this, arguments) &&
+		return this.$super(arguments) &&
 			// Moves only in the characteristic 'L' shape
 			((d.x === 2 && d.y === 1) || (d.y === 2 && d.x === 1));
 	},
@@ -97,7 +97,7 @@ Q.ns('Q.chess').Rook = Q.define({
 	constructor: 'Rook',		
 	isMoveLegal: function(move) {
 		var d = this.delta(move);
-		return this.$super.isMoveLegal.apply(this, arguments) &&
+		return this.$super(arguments) &&
 			// Can move only in perfectly straight lines
 			(d.x === 0 || d.y === 0);
 	}
@@ -109,7 +109,7 @@ Q.ns('Q.chess').Pawn = Q.define({
 	isMoveLegal: function(move, attack) {
 		var first = this.pos.y === this.origin.y,
 			d = this.delta(move);
-		return this.$super.isMoveLegal.apply(this, arguments) &&
+		return this.$super(arguments) &&
 			// Pawns can only move forward (black is on top)
 			((this.player === 'black' && move.y > this.pos.y) || (this.player === 'white' && move.y < this.pos.y)) &&
 			// Pawns can normally only move forward one, and can move laterally if and only if they are attacking

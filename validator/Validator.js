@@ -31,7 +31,7 @@ Q.Validator = Q.define({
 		Q.copy(this, config);
 		var form = this.form,
 			submit = this.submit;
-		this.id = Q.id(this.idPrefix);
+		Q.id(this);
 		form = this.form = new Q(form);
 		submit = this.submit = submit ? new Q(submit) : submit;
 		// Internal validation map, to keep track of valid fields (see #validate).

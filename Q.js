@@ -60,7 +60,7 @@
 		return true;
 	}
 	
-	// Removes the given item(s) from the given array. Optionally uses a comparator to determine equality.
+	// Removes the given item from the given array. Optionally uses a comparator to determine equality.
 	function remove(array, item, comparator, scope) {
 		var index = indexOf(array, item, comparator, scope);
 		if (index !== -1) {
@@ -121,11 +121,11 @@
 	 *	statics: Object
 	 *		An object containing static function definitions; these will be copied directly onto the constructor function.
 	 *
-	 * When a class is defined, a reference to its superclass' prototype will be available via the $super property.
+	 * When a class is defined, a supermethod accessor will be available by the name $super.
 	 * This way, a subclass can execute masked (overridden) functions of the parent class.
-	 * Note that the function will be executed in the scope of the superclass' prototype unless it is executed using call or apply:
-	 * 	this.$super.constructor.apply(this, arguments);
-	 *	this.$super.someFunction.call(this, arg1, arg2);
+	 * To invoke a super function, simply execute the $super method with the desired parameters:
+	 * this.$super(arg1, arg2)
+	 * this.$super.apply(this, arguments)
 	 */
 	function define(definition) {
 		var Superclass = definition.extend || Object,
@@ -136,24 +136,15 @@
 		// If the passed superclass is an instance, we want to work with its constructor
 		Superclass = typeof Superclass === 'function' ? Superclass : Superclass.constructor;
 		// If the passed constructor is not a function, we need to generate a constructor
-		Subclass = typeof Subclass === 'function' ? Subclass : createConstructor(Subclass || Superclass);
-		// Keep a reference to the original class definition as a property on the constructor
-		Subclass.$def = definition,
-		// Clone the definition so we can manipulate it
-		definition = copyIf({
-			// Keep a reference to the "superclass" on the prototype (to call overridden parent functions)
-			$super: Superclass.prototype,
-			constructor: Subclass,
-		}, definition);
-		// Do not copy the special configs into the class' prototype
-		delete definition.extend;
-		delete definition.mixins;
-		delete definition.statics;
+		Subclass = typeof Subclass === 'function' ? Subclass : defineConstructor(Subclass || Superclass);
+		// Keep a reference to the superclass as a property on the constructor
+		Subclass.$super = Superclass;
+		Subclass.$owner = Subclass;
 		// Copy the definition into the prototype
-		copy($proto, definition);
+		copy($proto, prepareDefinition(Subclass, definition));
 		// Assign the prototype to the new class' constructor
 		Subclass.prototype = $proto;
-		// Set the 'name' property (IE does not have a constructor name property)
+		// Set the constructor's 'name' property
 		Subclass.name = Subclass.name || getName(Subclass);
 		// Apply mixins
 		mixin(Subclass, $mixins);
@@ -172,25 +163,55 @@
 		return typeof o !== 'function' ? o : Object.create ? Object.create(o.prototype) : new o();
 	}
 	
-	function getName(constructor) { 
-		var results = (/function (.{1,})\(/).exec(constructor.toString());
+	function getName(fn) {
+		var results = (/function (.{1,}?)\(/).exec(fn.toString());
 		return (results && results.length > 1) ? results[1] : '';
 	}
 	
+	function getClassName(obj) {
+		return getName(obj.constructor);
+	}
+	
 	// Generates a default constructor with the given name.
-	function createConstructor(name) {
+	function defineConstructor(name) {
 		name = typeof name === 'function' ? name.name : (typeof name === 'string' ? name : 'Object');
 		if (name.match(/[^\w\d\$]/)) throw 'Constructor names cannot contain special characters: ' + name + '()';
 		// Using eval to define a properly named function
-		eval('var fn = function ' + name + '(){defaultConstructor.apply(this,arguments);}');
+		eval('var fn = function ' + name + '(){this.$super(arguments);}');
 		return fn;
 	}
 	
-	// Default constructor; simply calls the $super constructor, if one exists.
-	function defaultConstructor() {
-		if (this.$super) {
-			this.$super.constructor.apply(this, arguments);
+	// Accepts a class definition and prepares it to be directly copied into a prototype.
+	function prepareDefinition(Class, definition) {
+		var name,
+			method;
+		// Clone the definition so we can manipulate it
+		definition = copy({}, definition);
+		// Do not copy the special configs
+		delete definition.extend;
+		delete definition.mixins;
+		delete definition.statics;
+		// Set the constructor and supermethod accessor
+		definition.constructor = Class;
+		definition.$super = $super;
+		// Set the owning class on all defined methods
+		for (name in definition) {
+			method = definition[name]
+			if (typeof method === 'function') {
+				method.$owner = Class;
+				method.$name = name;
+			}
 		}
+		return definition;
+	}
+	
+	// Supermethod accessor; invokes the "parent" of the currently executing method
+	function $super(args) {
+		var $method = this.$super.caller,
+			$name = $method.$name,
+			$owner = $method.$owner,
+			$super = $owner.$super;
+		return $super.prototype[$name].apply(this, args);
 	}
 	
 	/* Multiple inheritance function. Applies properties from a superclass or set of superclasses to a given subclass.
@@ -208,7 +229,7 @@
 			each(mixins, function(Mixin) {
 				var mixin = proto(Mixin);
 				mixin.$mixins = {};
-				copyIf(Subclass.prototype, mixin).$mixins[Mixin] = mixin;
+				copyIf(Subclass.prototype, mixin).$mixins[getName(Mixin)] = mixin;
 			});
 		}
 	}
@@ -288,7 +309,7 @@
 		},
 		
 		// Queries the DOM using the wrapped DOM element as the root (a la JQuery or Y.all()).
-		// TODO stub
+		// TODO stub. Eventually we want to query the dom, collect all matches into an array, and then sort the array by depth.
 		query: function(selector) {
 			return this.children();
 		},
@@ -302,7 +323,12 @@
 		// Traversals all return the flyweight Q instance wrapped around the matched node, or null if no matching node is found.
 		// Currently, the implementation is "dumb" and literally takes one step at a time; once querying is implemented, it will allow traversal using CSS selectors.
 		down: function(selector) {
-			return this.first();
+			return Q(this.query(selector)[0]);
+		},
+		
+		child: function(selector) {
+			selector = '> ' + (selector || '');
+			return this.down(selector);
 		},
 		
 		first: function(selector) {
@@ -578,6 +604,8 @@
 			indexOf: indexOf,
 			toArray: toArray,
 			define: define,
+			getName: getName,
+			getClassName: getClassName,
 			mixin: mixin,
 			getEventTarget: getEventTarget,
 			namespace: namespace,
@@ -635,10 +663,36 @@
 			},
 			
 			// Generates a unique ID by appending a sequence number to the given String prefix.
-			id: function(prefix) {
-				var idSeq = this.idSeq = this.idSeq || {};
+			// Optionally applies the generated ID to a given object.
+			// If no prefix is specified but an object is passed, one will be generated by using the object's constructor name.
+			id: function(prefix, obj) {
+				var idSeq = this.idSeq = this.idSeq || {},
+					getPrefix = function(proto) {
+						var prefix = 'q-';
+						if (proto && proto.constructor.$super) {
+							if (!proto.hasOwnProperty('idPrefix')) {
+								proto.idPrefix = getPrefix(proto.constructor.$super.prototype) +
+										Q.getClassName(proto).toLowerCase() + '-';
+							}
+							prefix = proto.idPrefix;
+						}
+						return prefix;
+					},
+					id;
+				if (typeof prefix === 'object') {
+					obj = prefix;
+					prefix = getPrefix(obj.constructor.prototype);
+				}
 				idSeq[prefix] = idSeq[prefix] || 0;
-				return prefix + idSeq[prefix]++;
+				if (obj && obj.id) {
+					id = obj.id;
+				} else {
+					id = prefix + idSeq[prefix]++;
+					if (obj) {
+						obj.id = id;
+					}
+				}
+				return id;
 			},
 			
 			/* Populates HTML templates with variables, resulting in dynamic HTML.
@@ -647,6 +701,9 @@
 			 *	The HTML template, either a single String or array of Strings which will be joined.
 			 * params: Object
 			 *	An object containing name/value pairs that will be mapped into the template.
+			 * partial: Boolean
+			 *	An optional flag indicating whether to skip template variables that do not have matching params.
+			 *	This can be useful when generating nested templates.
 			 *
 			 * Example:
 			 * var tpl = '<div class="{cls}" id="{id}">{content}</div>',
@@ -658,15 +715,16 @@
 			 * html = Q.tpl(tpl, params);
 			 * // The value of 'html' is: '<div class="my-class" id="my-id">Some Content</div>'
 			 */
-			tpl: function(tpl, params) {
+			tpl: function(tpl, params, partial) {
 				if (Q.isArray(tpl)) {
 					tpl = tpl.join('');
 				}
 				if (tpl && params && typeof tpl === 'string') {
 					tpl = tpl.replace(/\{.*?\}/g, function(matched) {
 						// Cut off the matched brackets {}
-						matched = matched.substring(1, matched.length - 1);
-						return params[matched];
+						var param = matched.substring(1, matched.length - 1);
+						matched = partial ? matched : '';
+						return params[param] || matched;
 					});
 				}
 				return tpl;
@@ -681,7 +739,7 @@
 			dom: function(html) {
 				renderTarget = renderTarget || document.createElement('div');
 				renderTarget.innerHTML = html;
-				return renderTarget.childNodes;
+				return Q.toArray(renderTarget.childNodes);
 			},
 			
 			// Selector-based batch observer.
@@ -782,7 +840,9 @@
 			urlAppend: function(url, params) {
 				if (typeof params === 'object') {
 					for (var param in params) {
-						url = Q.urlAppend(url, param + '=' + params[param]);
+						if (!Q.isEmpty(params[param])) {
+							url = Q.urlAppend(url, param + '=' + params[param]);
+						}
 					}
 				} else if (!Q.isEmpty(params)) {
 					url += (url.indexOf('?') !== -1 ? '&' : '?') + params;

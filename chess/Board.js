@@ -1,7 +1,8 @@
 Q.ns('Q.chess').Board = Q.define({
-	renderTo: undefined,
+	extend: Q.Component,
 	
-	boardCls: 'q-chess-board',
+	idPrefix: 'q-chess-board-',
+	cls: 'q-chess-board',
 	rowCls: 'q-chess-row',
 	altRowCls: 'q-chess-row-alt',
 	cellCls: 'q-chess-cell',
@@ -9,21 +10,30 @@ Q.ns('Q.chess').Board = Q.define({
 	selectedCellCls: 'q-chess-cell-selected',
 	legalCellCls: 'q-chess-cell-legal',
 	
-	tpl: '<table class="{boardCls}">{rows}</table>',
-	rowsTpl: [
-		'<tr class="{rowCls}">{cells}</tr>',
-		'<tr class="{altRowCls}">{cells}</tr>'
+	tpl: [
+		'<table id="{id}" class="{cls}">',
+			'<tbody>{rowsTpl}</tbody>',
+		'</table>',
 	],
+	
+	rowsTpl: [
+		'<tr class="{rowCls}">{cellsTpl}</tr>',
+		'<tr class="{altRowCls}">{cellsTpl}</tr>'
+	],
+	
 	cellsTpl: [
 		'<td class="{cellCls}"></td>',
 		'<td class="{altCellCls}"></td>'
 	],
 	
-	constructor: function Board(config) {
-		Q.copy(this, config);
-		if (this.renderTo) {
-			this.render(this.renderTo);
-		}
+	constructor: 'Board',
+	
+	getTpl: function() {
+		return Q.tpl(this.tpl, {
+			rowsTpl: Q.tpl(this.repeatTpl(this.rowsTpl, 3), {
+				cellsTpl: this.repeatTpl(this.cellsTpl, 3).join('')
+			}, true)
+		}, true);
 	},
 	
 	repeatTpl: function(tpl, times) {
@@ -32,25 +42,6 @@ Q.ns('Q.chess').Board = Q.define({
 			tpl = tpl.concat(original);
 		}
 		return tpl;
-	},
-	
-	render: function(renderTo) {
-		this.renderTo = renderTo = renderTo || this.renderTo;
-		if (this.el) {
-			this.el.removeSelf();
-		}
-		this.el = new Q(Q.tpl(this.tpl, {
-			boardCls: this.boardCls,
-			rows: Q.tpl(this.repeatTpl(this.rowsTpl, 3), {
-				rowCls: this.rowCls,
-				altRowCls: this.altRowCls,
-				cells: Q.tpl(this.repeatTpl(this.cellsTpl, 3), {
-					cellCls: this.cellCls,
-					altCellCls: this.altCellCls
-				})
-			})
-		}));
-		Q(renderTo).add(this.el);
 	},
 	
 	getCells: function() {
